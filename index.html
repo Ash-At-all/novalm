@@ -217,6 +217,11 @@ h1 em { color: var(--accent); font-style: italic; }
 <nav>
   <div class="logo">Nova<span>LM</span></div>
   <div class="nav-r">
+    <select id="modelSelect" onchange="switchModel(this.value)" style="font-family:'DM Sans',sans-serif;font-size:.8rem;color:var(--ink);background:rgba(91,110,245,.08);border:.5px solid var(--border);border-radius:100px;padding:.3rem .8rem;cursor:pointer;outline:none;">
+  <option value="flash">⚡ Gemini Flash</option>
+  <option value="pro">🧠 Gemini Pro</option>
+  <option value="openai">🤖 GPT-4o mini</option>
+  </select>
     <a href="https://www.instagram.com/mujahid_1.0x/?hl=en">Instagram</a>
     <a href="https://pro-kart-e-commerce.vercel.app/">ProKart E-Commerce Project</a>
     <a href="https://github.com/Ash-At-all">GitHub</a>
@@ -344,6 +349,13 @@ closeSb();
 <!-- RAG ENGINE -->
 <script>
 let chunks=[],history=[];
+let currentModel = 'flash';
+function switchModel(val) {
+  currentModel = val;
+  history = [];
+  const names = { flash:'⚡ Gemini Flash', pro:'🧠 Gemini Pro', openai:'🤖 GPT-4o mini' };
+  addBot('Switched to <strong>' + names[val] + '</strong>. Conversation reset!');
+}
 const SAMPLE=`NovaLM is an open educational platform teaching language model fundamentals through interactive visualizations.
 
 Tokenization: Raw text is split into tokens using Byte Pair Encoding (BPE). Each token maps to a high-dimensional embedding vector capturing semantic meaning. Vocabulary size typically ranges from 32k to 100k tokens.
@@ -407,13 +419,10 @@ ${ctx_text}
 Be concise and clear. 2-3 short paragraphs max.`;
   history.push({role:'user', parts:[{text:q}]});
   try{
-    const res=await fetch(GEMINI_URL,{
+    const res=await fetch('/api/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        system_instruction:{parts:[{text:systemPrompt}]},
-        contents: history
-      })
+      body: JSON.stringify({ model: currentModel, system_instruction:{parts:[{text:systemPrompt}]}, contents: history })
     });
     const data=await res.json();
     rmThinking();
