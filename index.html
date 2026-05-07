@@ -189,10 +189,12 @@ h1 em { color: var(--accent); font-style: italic; }
   cursor: pointer; align-items: center; justify-content: center;
   transition: transform .2s;
 }
-.sb-overlay {
+.sb-overlay .sb-overlay {
   display: none; position: fixed; inset: 0; z-index: 140;
   background: rgba(0,0,0,0.35);
+  pointer-events: none;
 }
+.sb-overlay.show { pointer-events: all; }
 .sb-overlay.show { display: block; }
 
 @media(max-width:680px){
