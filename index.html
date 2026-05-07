@@ -180,7 +180,34 @@ h1 em { color: var(--accent); font-style: italic; }
 }
 #backBtn:hover { color: var(--ink); }
 
-@media(max-width:680px){ .sb{display:none;} }
+.sb-toggle {
+  display: none;
+  position: fixed; bottom: 5rem; right: 1.2rem; z-index: 400;
+  width: 50px; height: 50px; border-radius: 50%;
+  background: var(--accent); border: none;
+  box-shadow: 0 4px 20px rgba(91,110,245,0.4);
+  cursor: pointer; align-items: center; justify-content: center;
+  transition: transform .2s;
+}
+.sb-overlay {
+  display: none; position: fixed; inset: 0; z-index: 140;
+  background: rgba(0,0,0,0.35);
+}
+.sb-overlay.show { display: block; }
+
+@media(max-width:680px){
+  .sb-toggle { display: flex; }
+  .sb {
+    position: fixed; inset: 60px 0 0 0;
+    width: 100%; z-index: 150;
+    transform: translateX(-100%);
+    transition: transform .3s ease;
+    padding-bottom: 5rem;
+  }
+  .sb.open { transform: translateX(0); }
+  .chat-main { margin-left: 0; }
+}
+
 </style>
 </head>
 <body>
@@ -209,6 +236,11 @@ h1 em { color: var(--accent); font-style: italic; }
   </div>
 </div>
 
+<div class="sb-overlay" id="sbOverlay" onclick="closeSb()"></div>
+
+<button class="sb-toggle" id="sbToggle" onclick="toggleSb()">
+  <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+</button>
 <!-- CHAT -->
 <div id="chat">
   <aside class="sb">
@@ -282,13 +314,24 @@ init();
 <!-- PAGE TRANSITIONS -->
 <script>
 function openChat(){
+  document.getElementById('sbToggle').style.display='flex';
   document.getElementById('hero').classList.add('gone');
   document.getElementById('canvas').classList.add('dim');
   document.getElementById('chat').classList.add('on');
   document.getElementById('backBtn').style.display='flex';
   setTimeout(()=>document.getElementById('chatIn').focus(),650);
 }
+function toggleSb(){
+  document.querySelector('.sb').classList.toggle('open');
+  document.getElementById('sbOverlay').classList.toggle('show');
+}
+function closeSb(){
+  document.querySelector('.sb').classList.remove('open');
+  document.getElementById('sbOverlay').classList.remove('show');
+}
 function goHome(){
+  document.getElementById('sbToggle').style.display='none';
+closeSb();
   document.getElementById('hero').classList.remove('gone');
   document.getElementById('canvas').classList.remove('dim');
   document.getElementById('chat').classList.remove('on');
