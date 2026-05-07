@@ -1,0 +1,6 @@
+{
+  "name": "novalm",
+  "version": "1.0.0",
+  "description": "NovaLM - RAG Chatbot with custom knowledge base",
+  "main": "index.html"
+}
