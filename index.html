@@ -1,633 +1,507 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NovaLM</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-
 <style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink: #0f0f13; --ink2: #1c1c24;
+  --accent: #5b6ef5; --accent2: #a78bfa;
+  --muted: #6b7080; --light: #f5f4f0;
+  --border: rgba(91,110,245,0.18);
+}
+html, body { height: 100%; overflow: hidden; font-family: 'DM Sans', sans-serif; background: var(--light); color: var(--ink); }
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2.5rem; height: 60px;
+  background: rgba(245,244,240,0.88); backdrop-filter: blur(16px);
+  border-bottom: 0.5px solid var(--border);
+}
+.logo { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
+.logo span { color: var(--accent); }
+.nav-r { display: flex; gap: 1.6rem; }
+.nav-r a { font-size: 0.85rem; color: var(--muted); text-decoration: none; transition: color .2s; }
+.nav-r a:hover { color: var(--ink); }
+
+/* CANVAS */
+#canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1; transition: opacity .7s; }
+#canvas.dim { opacity: .15; }
+
+/* HERO */
+#hero {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  transition: opacity .6s, transform .6s;
+}
+#hero.gone { opacity: 0; pointer-events: none; transform: translateY(-24px); }
+.hero-inner { position: relative; z-index: 2; max-width: 660px; padding: 0 2rem; animation: up .9s ease both; }
+@keyframes up { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: .72rem; font-weight: 500; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--accent); background: rgba(91,110,245,.08);
+  border: .5px solid rgba(91,110,245,.26); border-radius: 100px;
+  padding: .28rem .85rem; margin-bottom: 1.4rem;
+}
+.badge::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+  animation: blink 2s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(1.7)} }
+
+h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.8rem,6vw,4.8rem); font-weight: 700;
+  line-height: 1.08; letter-spacing: -1.5px; margin-bottom: 1rem;
+}
+h1 em { color: var(--accent); font-style: italic; }
+.sub { font-size: 1.05rem; font-weight: 300; color: var(--muted); line-height: 1.75; max-width: 460px; margin: 0 auto 2.2rem; }
+
+.btn-start {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-size: .95rem; font-weight: 500; color: #fff; background: var(--ink);
+  border: none; border-radius: 100px; padding: .82rem 2.2rem;
+  cursor: pointer; transition: background .22s, transform .15s;
+}
+.btn-start:hover { background: var(--accent); transform: translateY(-2px); }
+.btn-start svg { transition: transform .2s; }
+.btn-start:hover svg { transform: translateX(3px); }
+
+/* CHAT PAGE */
+#chat {
+  position: fixed; inset: 0; z-index: 20; padding-top: 60px;
+  display: flex; opacity: 0; pointer-events: none; transition: opacity .6s;
+}
+#chat.on { opacity: 1; pointer-events: all; }
+
+/* sidebar */
+.sb {
+  width: 268px; flex-shrink: 0;
+  background: rgba(248,248,246,.97); backdrop-filter: blur(12px);
+  border-right: .5px solid rgba(0,0,0,.07);
+  padding: 1.2rem 1rem; display: flex; flex-direction: column; gap: .7rem;
+  overflow-y: auto;
+}
+.sb-label { font-size: .7rem; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.sb textarea {
+  width: 100%; height: 108px; resize: vertical;
+  background: rgba(255,255,255,.75); border: .5px solid rgba(0,0,0,.1);
+  border-radius: 8px; padding: .65rem; font-family: 'DM Sans',sans-serif;
+  font-size: .78rem; color: var(--ink); outline: none; transition: border-color .2s;
+}
+.sb textarea:focus { border-color: var(--accent); }
+.sb textarea::placeholder { color: rgba(0,0,0,.28); }
+.upload-label {
+  display: flex; align-items: center; gap: 7px; justify-content: center;
+  border: 1px dashed rgba(91,110,245,.35); border-radius: 8px;
+  padding: .6rem; font-size: .78rem; color: var(--accent);
+  cursor: pointer; transition: background .2s;
+}
+.upload-label:hover { background: rgba(91,110,245,.06); }
+.btn-idx {
+  width: 100%; font-size: .82rem; font-weight: 500; color: #fff;
+  background: var(--accent); border: none; border-radius: 8px;
+  padding: .58rem; cursor: pointer; transition: opacity .2s;
+}
+.btn-idx:hover { opacity: .85; }
+.btn-idx:disabled { opacity: .4; cursor: not-allowed; }
+.sb-status { font-size: .71rem; color: var(--muted); text-align: center; min-height: 16px; }
+.sb-status.ok { color: #059669; }
+.divider { height: .5px; background: rgba(0,0,0,.07); }
+.sb-tip { font-size: .71rem; color: var(--muted); line-height: 1.6; }
+.sb-tip strong { color: var(--ink); }
+
+/* main */
+.main { flex: 1; display: flex; flex-direction: column; background: #fff; overflow: hidden; }
+.msgs { flex: 1; overflow-y: auto; padding: 2rem 0; }
+.msgs::-webkit-scrollbar { width: 5px; }
+.msgs::-webkit-scrollbar-thumb { background: rgba(0,0,0,.09); border-radius: 3px; }
+
+.row { max-width: 720px; margin: 0 auto; padding: .65rem 1.5rem; display: flex; gap: 11px; align-items: flex-start; }
+.row.u { flex-direction: row-reverse; }
+.av {
+  width: 33px; height: 33px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .78rem; font-weight: 600;
+}
+.av.b { background: var(--accent); color: #fff; }
+.av.u { background: var(--ink); color: #fff; }
+.bub {
+  background: #f7f7f8; border-radius: 14px; padding: .8rem 1.05rem;
+  font-size: .9rem; line-height: 1.72; color: var(--ink); max-width: 82%;
+}
+.row.u .bub { background: var(--ink); color: #fff; border-bottom-right-radius: 4px; }
+.bub.thinking { color: var(--muted); font-style: italic; font-size: .84rem; }
+.src-tag {
+  display: inline-block; margin-top: 7px; font-size: .69rem;
+  color: var(--accent); background: rgba(91,110,245,.07);
+  border-radius: 6px; padding: 3px 8px;
 }
 
-:root{
-  --bg:#f5f4f0;
-  --text:#111827;
-  --muted:#6b7280;
-  --accent:#5b6ef5;
-  --border:#dbe1ff;
+/* input */
+.input-bar { padding: 1rem 1.5rem 1.3rem; border-top: .5px solid rgba(0,0,0,.06); background: #fff; }
+.input-wrap {
+  max-width: 720px; margin: 0 auto;
+  display: flex; align-items: center; gap: 8px;
+  background: #f7f7f8; border: .5px solid rgba(0,0,0,.1);
+  border-radius: 14px; padding: .48rem .5rem .48rem 1.1rem;
+  transition: border-color .2s, box-shadow .2s;
 }
-
-html,body{
-  width:100%;
-  min-height:100%;
-  overflow-x:hidden;
-  font-family:'DM Sans',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  -webkit-overflow-scrolling:touch;
+.input-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,110,245,.08); }
+.input-wrap input {
+  flex: 1; border: none; background: transparent; outline: none;
+  font-family: 'DM Sans',sans-serif; font-size: .92rem; color: var(--ink);
 }
-
-/* NAVBAR */
-
-nav{
-  position:sticky;
-  top:0;
-  z-index:100;
-  width:100%;
-  background:white;
-  border-bottom:1px solid #ececec;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:14px 18px;
+.input-wrap input::placeholder { color: rgba(0,0,0,.28); }
+.send {
+  width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0;
+  background: var(--ink); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s, transform .15s;
 }
+.send:hover { background: var(--accent); transform: scale(1.06); }
+.input-hint { max-width: 720px; margin: .45rem auto 0; font-size: .71rem; color: rgba(0,0,0,.26); text-align: center; }
 
-.logo{
-  font-family:'Playfair Display',serif;
-  font-size:28px;
-  font-weight:700;
+/* back */
+#backBtn {
+  position: fixed; bottom: 1.4rem; right: 1.4rem; z-index: 300;
+  display: none; align-items: center; gap: 6px;
+  font-size: .78rem; color: var(--muted); background: rgba(255,255,255,.92);
+  border: .5px solid rgba(0,0,0,.1); border-radius: 100px;
+  padding: .44rem .95rem; cursor: pointer; backdrop-filter: blur(8px);
+  transition: color .2s; font-family: 'DM Sans',sans-serif;
 }
+#backBtn:hover { color: var(--ink); }
 
-.logo span{
-  color:var(--accent);
+.sb-toggle {
+  display: none;
+  position: fixed; bottom: 8rem; right: 1.2rem; z-index: 400;
+  width: 50px; height: 50px; border-radius: 50%;
+  background: var(--accent); border: none;
+  box-shadow: 0 4px 20px rgba(91,110,245,0.4);
+  cursor: pointer; align-items: center; justify-content: center;
+  transition: transform .2s;
 }
-
-.nav-right{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  flex-wrap:wrap;
+.sb-overlay {
+  display: none; position: fixed; inset: 0; z-index: 140;
+  background: rgba(0,0,0,0.35);
+  pointer-events: none;
 }
+.sb-overlay.show { pointer-events: all; }
+.sb-overlay.show { pointer-events: all; display: block; }
 
-.nav-right a{
-  text-decoration:none;
-  color:var(--muted);
-  font-size:13px;
-}
-
-.nav-right a:hover{
-  color:black;
-}
-
-#modelSelect{
-  border:1px solid var(--border);
-  background:#eef1ff;
-  border-radius:999px;
-  padding:8px 12px;
-  font-size:13px;
-  outline:none;
-}
-
-/* MAIN */
-
-.container{
-  width:100%;
-  max-width:1200px;
-  margin:auto;
-  padding:20px;
-}
-
-.hero{
-  text-align:center;
-  padding:40px 20px 20px;
-}
-
-.badge{
-  display:inline-block;
-  background:#eef1ff;
-  color:var(--accent);
-  padding:8px 14px;
-  border-radius:999px;
-  font-size:12px;
-  margin-bottom:18px;
-}
-
-.hero h1{
-  font-family:'Playfair Display',serif;
-  font-size:clamp(2.2rem,7vw,4.8rem);
-  line-height:1.1;
-  margin-bottom:18px;
-}
-
-.hero h1 em{
-  color:var(--accent);
-}
-
-.hero p{
-  max-width:650px;
-  margin:auto;
-  color:var(--muted);
-  line-height:1.7;
-}
-
-.main-grid{
-  margin-top:30px;
-  display:grid;
-  grid-template-columns:320px 1fr;
-  gap:20px;
-}
-
-@media(max-width:900px){
-  .main-grid{
-    grid-template-columns:1fr;
+@media(max-width:680px){
+  .sb-toggle { display: flex; }
+  .sb {
+    position: fixed; inset: 60px 0 0 0;
+    width: 100%; z-index: 150;
+    transform: translateX(-100%);
+    transition: transform .3s ease;
+    padding-bottom: 5rem;
   }
+  .sb.open { transform: translateX(0); }
+  .chat-main { margin-left: 0; }
 }
-
-/* SIDEBAR */
-
-.sidebar{
-  background:white;
-  border-radius:18px;
-  padding:18px;
-  border:1px solid #ececec;
-  height:fit-content;
+.cursor {
+  display: inline-block;
+  animation: blink-cursor 0.7s infinite;
 }
-
-.sidebar h3{
-  font-size:13px;
-  text-transform:uppercase;
-  letter-spacing:1px;
-  margin-bottom:12px;
-  color:var(--muted);
-}
-
-textarea{
-  width:100%;
-  height:170px;
-  resize:vertical;
-  border:1px solid #ddd;
-  border-radius:12px;
-  padding:14px;
-  font-family:'DM Sans',sans-serif;
-  outline:none;
-  margin-bottom:14px;
-}
-
-textarea:focus{
-  border-color:var(--accent);
-}
-
-.upload-label{
-  width:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  border:2px dashed #bcc7ff;
-  padding:14px;
-  border-radius:12px;
-  cursor:pointer;
-  color:var(--accent);
-  margin-bottom:14px;
-}
-
-.upload-label:hover{
-  background:#f5f7ff;
-}
-
-button{
-  border:none;
-  cursor:pointer;
-}
-
-.index-btn{
-  width:100%;
-  background:var(--accent);
-  color:white;
-  padding:14px;
-  border-radius:12px;
-  font-weight:600;
-}
-
-.index-btn:hover{
-  opacity:.9;
-}
-
-.status{
-  margin-top:14px;
-  font-size:13px;
-  color:#059669;
-}
-
-.tip{
-  margin-top:20px;
-  font-size:13px;
-  line-height:1.7;
-  color:var(--muted);
-}
-
-/* CHAT */
-
-.chat{
-  background:white;
-  border-radius:18px;
-  border:1px solid #ececec;
-  display:flex;
-  flex-direction:column;
-  min-height:650px;
-  overflow:hidden;
-}
-
-.messages{
-  flex:1;
-  overflow-y:auto;
-  padding:20px;
-}
-
-.msg{
-  display:flex;
-  gap:12px;
-  margin-bottom:18px;
-}
-
-.msg.user{
-  flex-direction:row-reverse;
-}
-
-.avatar{
-  width:38px;
-  height:38px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:white;
-  font-weight:700;
-  flex-shrink:0;
-}
-
-.bot .avatar{
-  background:var(--accent);
-}
-
-.user .avatar{
-  background:#111827;
-}
-
-.bubble{
-  max-width:80%;
-  padding:14px 16px;
-  border-radius:16px;
-  line-height:1.7;
-  font-size:15px;
-}
-
-.bot .bubble{
-  background:#f5f5f5;
-}
-
-.user .bubble{
-  background:#111827;
-  color:white;
-}
-
-.input-area{
-  border-top:1px solid #ececec;
-  padding:16px;
-}
-
-.input-wrap{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  background:#f5f5f5;
-  border-radius:14px;
-  padding:10px;
-}
-
-.input-wrap input{
-  flex:1;
-  border:none;
-  background:transparent;
-  outline:none;
-  font-size:15px;
-}
-
-.send-btn{
-  width:42px;
-  height:42px;
-  border-radius:12px;
-  background:var(--accent);
-  color:white;
-  font-size:18px;
-}
-
-.send-btn:hover{
-  opacity:.9;
-}
-
-.hint{
-  margin-top:10px;
-  text-align:center;
-  font-size:12px;
-  color:var(--muted);
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
 <nav>
   <div class="logo">Nova<span>LM</span></div>
-
-  <div class="nav-right">
-
-    <select id="modelSelect">
-      <option>⚡ Gemini Flash</option>
-      <option>🧠 Gemini Pro</option>
-      <option>🤖 GPT-4o mini</option>
-    </select>
-
+  <div class="nav-r">
+    <select id="modelSelect" onchange="switchModel(this.value)" style="font-family:'DM Sans',sans-serif;font-size:.8rem;color:var(--ink);background:rgba(91,110,245,.08);border:.5px solid var(--border);border-radius:100px;padding:.3rem .8rem;cursor:pointer;outline:none;">
+  <option value="flash">⚡ Gemini Flash</option>
+  <option value="pro">🧠 Gemini Pro</option>
+  <option value="openai">🤖 GPT-4o mini</option>
+  </select>
     <a href="https://www.instagram.com/mujahid_1.0x/?hl=en">Instagram</a>
-
-    <a href="https://pro-kart-e-commerce.vercel.app/">
-      ProKart E-Commerce Project
-    </a>
-
+    <a href="https://pro-kart-e-commerce.vercel.app/">ProKart E-Commerce Project</a>
     <a href="https://github.com/Ash-At-all">GitHub</a>
-
   </div>
 </nav>
 
-<div class="container">
+<canvas id="canvas"></canvas>
 
-  <div class="hero">
-    <div class="badge">
-      RAG · Retrieval-Augmented Generation
-    </div>
-
-    <h1>
-      Chat with your<br>
-      <em>own documents</em>
-    </h1>
-
-    <p>
-      Paste any document — notes, resume, PDFs —
-      and ask questions. NovaLM retrieves relevant
-      context and answers from your own data.
-    </p>
+<!-- HERO -->
+<div id="hero">
+  <div class="hero-inner">
+    <div class="badge">RAG · Retrieval-Augmented Generation</div>
+    <h1>Chat with your<br><em>own documents</em></h1>
+    <p class="sub">Paste any document — paper, resume, notes — and ask questions. NovaLM retrieves the right context and answers strictly from your data.</p>
+    <button class="btn-start" onclick="openChat()">
+      Get Started
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
   </div>
-
-  <div class="main-grid">
-
-    <!-- SIDEBAR -->
-
-    <div class="sidebar">
-
-      <h3>Knowledge Base</h3>
-
-      <textarea
-        id="kbText"
-        placeholder="Paste your document text here..."
-      ></textarea>
-
-      <label class="upload-label" for="fileInput">
-        📄 Upload .txt or .pdf
-      </label>
-
-      <input
-        type="file"
-        id="fileInput"
-        accept=".txt,.pdf,text/plain,application/pdf"
-        hidden
-      >
-
-      <button class="index-btn" onclick="indexDoc()">
-        Index Document
-      </button>
-
-      <div class="status" id="status">
-        Sample document loaded successfully
-      </div>
-
-      <div class="tip">
-        <strong>How RAG works:</strong><br><br>
-        Your document splits into chunks → your question retrieves
-        matching chunks → AI answers using only those chunks.
-      </div>
-
+</div>
+<div class="sb-overlay" id="sbOverlay" onclick="closeSb()"></div>
+<button class="sb-toggle" id="sbToggle" onclick="toggleSb()">
+  <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+</button>
+<!-- CHAT -->
+<div id="chat">
+  <aside class="sb">
+    <div class="sb-label">Knowledge Base</div>
+    <textarea id="kbText" placeholder="Paste your document text here…"></textarea>
+    <label class="upload-label" for="fileIn">      
+  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Upload .txt file
+    </label>
+    <input 
+  type="file" 
+  id="fileIn" 
+  accept=".txt,.pdf,text/plain,application/pdf"
+  style="display:none"
+  onchange="loadFile(this)">
+    <button class="btn-idx" id="idxBtn" onclick="indexDoc()">Index Document</button>
+    <div class="sb-status ok" id="sbStatus">Sample doc preloaded — ask anything!</div>
+    <div class="divider"></div>
+    <div class="sb-tip">
+      <strong>How RAG works:</strong><br>
+      Your doc splits into chunks → your question retrieves the best matches → Claude answers only from those chunks. No hallucination.
     </div>
+  </aside>
 
-    <!-- CHAT -->
-
-    <div class="chat">
-
-      <div class="messages" id="messages">
-
-        <div class="msg bot">
-          <div class="avatar">N</div>
-
-          <div class="bubble">
-            Hi! I'm NovaLM 🤖<br><br>
-            Upload a TXT or PDF file and ask questions
-            about your document.
-          </div>
+  <div class="main">
+    <div class="msgs" id="msgs">
+      <div class="row">
+        <div class="av b">N</div>
+        <div class="bub">
+          Hi! I'm the <strong>NovaLM RAG bot</strong>. A sample document is already loaded — ask me anything, or paste your own doc in the sidebar and click <em>Index Document</em>. 📄
         </div>
-
       </div>
-
-      <div class="input-area">
-
-        <div class="input-wrap">
-
-          <input
-            id="chatInput"
-            placeholder="Ask something about your document..."
-          >
-
-          <button class="send-btn" onclick="sendMessage()">
-            ↑
-          </button>
-
-        </div>
-
-        <div class="hint">
-          Answers come only from your indexed document
-        </div>
-
-      </div>
-
     </div>
-
+    <div class="input-bar">
+      <div class="input-wrap">
+        <input id="chatIn" type="text" placeholder="Ask a question about your document…" onkeydown="if(event.key==='Enter'){event.preventDefault();send();}">
+        <button class="send" onclick="send()">
+          <svg width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        </button>
+      </div>
+      <div class="input-hint">Answers come only from your indexed document · powered by NovaLM</div>
+    </div>
   </div>
-
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<button id="backBtn" onclick="goHome()">← Home</button>
 
+<!-- PARTICLES -->
 <script>
-let knowledgeBase = "";
-
-const SAMPLE = `
-NovaLM is an educational RAG chatbot platform.
-
-RAG stands for Retrieval-Augmented Generation.
-
-RAG retrieves relevant document chunks before generating answers.
-
-Transformers use attention mechanisms.
-
-Tokenization converts text into tokens.
-`;
-
-document.getElementById("kbText").value = SAMPLE;
-knowledgeBase = SAMPLE;
-
-/* FILE UPLOAD */
-
-document
-.getElementById("fileInput")
-.addEventListener("change", async function(e){
-
-  const file = e.target.files[0];
-
-  if(!file) return;
-
-  const status = document.getElementById("status");
-
-  /* TXT */
-
-  if(file.type === "text/plain" || file.name.endsWith(".txt")){
-
-    const reader = new FileReader();
-
-    reader.onload = function(event){
-      document.getElementById("kbText").value = event.target.result;
-      status.innerText = "TXT file loaded successfully";
-    };
-
-    reader.readAsText(file);
-  }
-
-  /* PDF */
-
-  else if(file.type === "application/pdf" || file.name.endsWith(".pdf")){
-
-    try{
-
-      status.innerText = "Reading PDF...";
-
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-
-      const buffer = await file.arrayBuffer();
-
-      const pdf = await pdfjsLib.getDocument({
-        data: buffer
-      }).promise;
-
-      let text = "";
-
-      for(let i=1;i<=pdf.numPages;i++){
-
-        const page = await pdf.getPage(i);
-
-        const content = await page.getTextContent();
-
-        const strings = content.items.map(item => item.str);
-
-        text += strings.join(" ") + "\n";
-      }
-
-      document.getElementById("kbText").value = text;
-
-      status.innerText =
-      "PDF loaded successfully (" + pdf.numPages + " pages)";
-
-    }catch(err){
-
-      console.error(err);
-
-      status.innerText =
-      "PDF reading failed";
-    }
-  }
-
-});
-
-/* INDEX */
-
-function indexDoc(){
-
-  knowledgeBase =
-  document.getElementById("kbText").value;
-
-  document.getElementById("status").innerText =
-  "Document indexed successfully";
+const cv=document.getElementById('canvas'), cx=cv.getContext('2d');
+let W,H,nodes; const mouse={x:-999,y:-999};
+const A1='#5b6ef5',A2='#a78bfa',N=680,D=90;
+function resize(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight;}
+class Node{
+  constructor(){this.x=Math.random()*(W||800);this.y=Math.random()*(H||600);this.r=2+Math.random()*3;this.vx=(Math.random()-.5)*.38;this.vy=(Math.random()-.5)*.38;this.col=Math.random()<.5?A1:A2;this.al=.3+Math.random()*.5;this.ph=Math.random()*Math.PI*2;this.ps=.018+Math.random()*.022;}
+  upd(){const dx=this.x-mouse.x,dy=this.y-mouse.y,d=Math.sqrt(dx*dx+dy*dy);if(d<110&&d>0){const f=(110-d)/110*.55;this.vx+=dx/d*f;this.vy+=dy/d*f;}this.vx*=.987;this.vy*=.987;this.x+=this.vx;this.y+=this.vy;if(this.x<-20)this.x=W+20;if(this.x>W+20)this.x=-20;if(this.y<-20)this.y=H+20;if(this.y>H+20)this.y=-20;this.ph+=this.ps;}
+  draw(){const p=.85+.15*Math.sin(this.ph);cx.save();cx.globalAlpha=this.al*p;cx.beginPath();cx.arc(this.x,this.y,this.r*p,0,Math.PI*2);cx.fillStyle=this.col;cx.fill();cx.globalAlpha=this.al*.14*p;cx.beginPath();cx.arc(this.x,this.y,this.r*p*2.8,0,Math.PI*2);cx.fillStyle=this.col;cx.fill();cx.restore();}
 }
-
-/* CHAT */
-
-function addMessage(text,isUser=false){
-
-  const messages = document.getElementById("messages");
-
-  const div = document.createElement("div");
-
-  div.className = isUser
-  ? "msg user"
-  : "msg bot";
-
-  div.innerHTML = `
-    <div class="avatar">
-      ${isUser ? "U" : "N"}
-    </div>
-
-    <div class="bubble">
-      ${text}
-    </div>
-  `;
-
-  messages.appendChild(div);
-
-  messages.scrollTop = messages.scrollHeight;
+const sigs=[];
+function spawnSig(){if(!nodes)return;const a=Math.floor(Math.random()*N),b=Math.floor(Math.random()*N);if(a===b)return;const dx=nodes[b].x-nodes[a].x,dy=nodes[b].y-nodes[a].y;if(Math.sqrt(dx*dx+dy*dy)<D)sigs.push({a,b,t:0,s:.009+Math.random()*.01});}
+setInterval(spawnSig,60);
+function loop(){
+  cx.clearRect(0,0,W,H);
+  for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){const dx=nodes[i].x-nodes[j].x,dy=nodes[i].y-nodes[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<D){cx.save();cx.globalAlpha=(1-d/D)*.22;cx.strokeStyle=A1;cx.lineWidth=.8;cx.beginPath();cx.moveTo(nodes[i].x,nodes[i].y);cx.lineTo(nodes[j].x,nodes[j].y);cx.stroke();cx.restore();}}
+  nodes.forEach(n=>{const dx=n.x-mouse.x,dy=n.y-mouse.y,d=Math.sqrt(dx*dx+dy*dy);if(d<160){cx.save();cx.globalAlpha=(1-d/160)*.38;cx.strokeStyle=A2;cx.lineWidth=1;cx.beginPath();cx.moveTo(n.x,n.y);cx.lineTo(mouse.x,mouse.y);cx.stroke();cx.restore();}});
+  nodes.forEach(n=>{n.upd();n.draw();});
+  for(let i=sigs.length-1;i>=0;i--){const s=sigs[i];s.t+=s.s;if(s.t>=1){sigs.splice(i,1);continue;}const na=nodes[s.a],nb=nodes[s.b],sx=na.x+(nb.x-na.x)*s.t,sy=na.y+(nb.y-na.y)*s.t;cx.save();cx.globalAlpha=.85*(1-Math.abs(s.t-.5)*2);cx.beginPath();cx.arc(sx,sy,2.4,0,Math.PI*2);cx.fillStyle='#fff';cx.fill();cx.restore();}
+  requestAnimationFrame(loop);
 }
-
-function sendMessage(){
-
-  const input = document.getElementById("chatInput");
-
-  const q = input.value.trim();
-
-  if(!q) return;
-
-  addMessage(q,true);
-
-  input.value = "";
-
-  let answer = "";
-
-  if(
-    knowledgeBase
-    .toLowerCase()
-    .includes(q.toLowerCase())
-  ){
-    answer =
-    "I found matching information in your document.";
-  }else{
-    answer =
-    "I couldn't find that exact information in the document.";
-  }
-
-  setTimeout(()=>{
-    addMessage(answer,false);
-  },500);
-}
-
-document
-.getElementById("chatInput")
-.addEventListener("keydown",function(e){
-
-  if(e.key==="Enter"){
-    sendMessage();
-  }
-
-});
+function init(){resize();nodes=Array.from({length:N},()=>new Node());loop();}
+window.addEventListener('resize',resize);
+window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+init();
 </script>
 
+<!-- PAGE TRANSITIONS -->
+<script>
+function openChat(){
+  document.getElementById('sbToggle').style.display='flex';
+  document.getElementById('hero').classList.add('gone');
+  document.getElementById('canvas').classList.add('dim');
+  document.getElementById('chat').classList.add('on');
+  document.getElementById('backBtn').style.display='flex';
+  setTimeout(()=>document.getElementById('chatIn').focus(),650);
+}
+function toggleSb(){
+  document.querySelector('.sb').classList.toggle('open');
+  document.getElementById('sbOverlay').classList.toggle('show');
+}
+function closeSb(){
+  document.querySelector('.sb').classList.remove('open');
+  document.getElementById('sbOverlay').classList.remove('show');
+}
+function goHome(){
+  document.getElementById('sbToggle').style.display='none';
+  closeSb();
+  document.getElementById('hero').classList.remove('gone');
+  document.getElementById('canvas').classList.remove('dim');
+  document.getElementById('chat').classList.remove('on');
+  document.getElementById('backBtn').style.display='none';
+}
+</script>
+
+<!-- RAG ENGINE -->
+<script>
+let chunks=[], history=[];let currentModel = 'flash';
+function switchModel(val) {
+  currentModel = val;
+  history = [];
+  const names = { flash:'⚡ Gemini Flash', pro:'🧠 Gemini Pro', openai:'🤖 GPT-4o mini' };
+  addBot('Switched to <strong>' + names[val] + '</strong>. Conversation reset!');
+}
+const SAMPLE=`NovaLM is an open educational platform teaching language model fundamentals through interactive visualizations.
+
+Tokenization: Raw text is split into tokens using Byte Pair Encoding (BPE). Each token maps to a high-dimensional embedding vector capturing semantic meaning. Vocabulary size typically ranges from 32k to 100k tokens.
+
+Attention Mechanism: The attention mechanism uses queries, keys, and values. A query vector is compared against all key vectors using dot-product similarity, then softmax-normalized into attention weights. Multi-head attention runs several operations in parallel for richer representations.
+
+Transformer Architecture: A transformer stacks encoder or decoder blocks. Each block has multi-head self-attention followed by a feed-forward network. Residual connections and layer normalization stabilize training.
+
+Pretraining: Language models are pretrained by predicting the next token (Causal LM) or filling masked tokens (Masked LM). The loss is cross-entropy between predicted and true token distributions.
+
+Fine-Tuning and RLHF: After pretraining, models are fine-tuned on curated data (SFT). RLHF trains a reward model on human preferences and uses PPO or DPO to align the model.
+
+Inference and Sampling: The model outputs a probability distribution over vocabulary. Greedy decoding picks the top token. Beam search explores multiple paths. Top-k and top-p nucleus sampling add controlled randomness via temperature.
+
+RAG (Retrieval-Augmented Generation): RAG improves LLM accuracy by retrieving relevant document chunks at query time and injecting them as context. This grounds answers in real data, reducing hallucination. NovaLM uses TF-IDF cosine similarity for in-browser retrieval.`;
+
+function chunk(text,size=380,ov=70){const w=text.split(/\s+/).filter(Boolean),out=[];for(let i=0;i<w.length;i+=size-ov){const c=w.slice(i,i+size).join(' ');if(c.trim())out.push(c.trim());if(i+size>=w.length)break;}return out;}
+function tok(t){return t.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(Boolean);}
+function tf(ts){const m={};ts.forEach(t=>m[t]=(m[t]||0)+1);const n=ts.length;Object.keys(m).forEach(k=>m[k]/=n);return m;}
+function sim(q,doc){const qt=tok(q),dt=tok(doc),qm=tf(qt),dm=tf(dt),all=new Set([...Object.keys(qm),...Object.keys(dm)]);let dot=0,qn=0,dn=0;all.forEach(t=>{const a=qm[t]||0,b=dm[t]||0;dot+=a*b;qn+=a*a;dn+=b*b;});return qn&&dn?dot/(Math.sqrt(qn)*Math.sqrt(dn)):0;}
+function retrieve(q,k=4){return chunks.map((c,i)=>({c,s:sim(q,c),i})).sort((a,b)=>b.s-a.s).slice(0,k).filter(x=>x.s>0);}
+
+function indexDoc(){
+  const text=document.getElementById('kbText').value.trim();
+  if(!text){setSt('⚠ Paste some text first','');return;}
+  const btn=document.getElementById('idxBtn');
+  btn.disabled=true;btn.textContent='Indexing…';
+  setTimeout(()=>{chunks=chunk(text);history=[];setSt('✓ '+chunks.length+' chunks ready!','ok');btn.disabled=false;btn.textContent='Re-index';addBot('Knowledge base updated — <strong>'+chunks.length+' chunks indexed</strong>. Ask me anything about your document!');},350);
+}
+function setSt(m,c){const e=document.getElementById('sbStatus');e.textContent=m;e.className='sb-status '+(c||'');}
+async function loadFile(inp) {
+  const f = inp.files[0];
+  if (!f) return;
+
+  // TXT file
+  if (f.name.endsWith('.txt')) {
+    const r = new FileReader();
+    r.onload = e => {
+      document.getElementById('kbText').value = e.target.result;
+      setSt('✓ ' + f.name + ' loaded. Click Index!', 'ok');
+    };
+    r.readAsText(f);
+    return;
+  }
+
+  // PDF file
+  if (f.name.endsWith('.pdf')) {
+    setSt('📄 Reading PDF...', '');
+    try {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+      const arrayBuffer = await f.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = '';
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const pageText = content.items.map(item => item.str).join(' ');
+        fullText += pageText + '\n';
+      }
+
+      document.getElementById('kbText').value = fullText;
+      setSt('✓ ' + f.name + ' (' + pdf.numPages + ' pages) loaded. Click Index!', 'ok');
+    } catch (err) {
+      setSt('⚠ PDF read failed: ' + err.message, '');
+    }
+  }
+}
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function addUser(t){const b=document.getElementById('msgs');const d=document.createElement('div');d.className='row u';d.innerHTML=`<div class="av u">U</div><div class="bub">${esc(t)}</div>`;b.appendChild(d);b.scrollTop=b.scrollHeight;}
+function addBot(html,srcs){
+  const b=document.getElementById('msgs');const d=document.createElement('div');d.className='row';
+  let s='';if(srcs&&srcs.length)s=`<div class="src-tag">📎 ${srcs.length} chunk${srcs.length>1?'s':''} retrieved · top match ${(srcs[0].s*100).toFixed(0)}%</div>`;
+  d.innerHTML=`<div class="av b">N</div><div class="bub">${html}${s}</div>`;
+  b.appendChild(d);b.scrollTop=b.scrollHeight;
+}
+function addThinking(){const b=document.getElementById('msgs');const d=document.createElement('div');d.className='row';d.id='think';d.innerHTML=`<div class="av b">N</div><div class="bub thinking">Retrieving context…</div>`;b.appendChild(d);b.scrollTop=b.scrollHeight;}
+function rmThinking(){const e=document.getElementById('think');if(e)e.remove();}
+
+// Proxy URL — key is hidden on server (Vercel serverless function)
+const GEMINI_URL = '/api/chat';
+
+async function send() {
+  const inp = document.getElementById('chatIn');
+  const q = inp.value.trim(); if (!q) return;
+  inp.value = '';
+  if (chunks.length === 0) { chunks = chunk(SAMPLE); setSt('✓ Sample doc loaded (' + chunks.length + ' chunks)', 'ok'); }
+
+  addUser(q); addThinking();
+  const hits = retrieve(q, 4);
+  const ctx_text = hits.length ? hits.map((h, i) => `[Chunk ${i+1}]\n${h.c}`).join('\n\n') : 'No relevant content found.';
+
+  const systemPrompt = `You are the NovaLM RAG assistant. Answer ONLY using the document context below. Do not use outside knowledge. If the answer is not in the context, say "I couldn't find that in the provided document."
+
+--- DOCUMENT CONTEXT ---
+${ctx_text}
+--- END CONTEXT ---
+
+Be concise and clear. 2-3 short paragraphs max.`;
+
+  history.push({ role: 'user', parts: [{ text: q }] });
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: currentModel,
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: history
+      })
+    });
+
+    const data = await res.json();
+    rmThinking();
+
+    if (data.error) { addBot('⚠️ API Error: ' + esc(data.error)); history.pop(); return; }
+
+    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+      addBot('⚠️ No response received. The model may have blocked the request or quota was exceeded.');
+      history.pop(); return;
+    }
+
+    const reply = data.candidates[0].content.parts[0].text;
+    history.push({ role: 'model', parts: [{ text: reply }] });
+    addBot(reply.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'), hits);
+
+  } catch (e) {
+    rmThinking();
+    addBot('⚠️ ' + esc(e.message));
+    history.pop();
+  }
+}
+window.addEventListener('load',()=>{chunks=chunk(SAMPLE);});
+</script>
 </body>
 </html>
