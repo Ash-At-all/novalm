@@ -209,7 +209,14 @@ h1 em { color: var(--accent); font-style: italic; }
   .sb.open { transform: translateX(0); }
   .chat-main { margin-left: 0; }
 }
-
+.cursor {
+  display: inline-block;
+  animation: blink-cursor 0.7s infinite;
+}
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
@@ -441,37 +448,87 @@ function rmThinking(){const e=document.getElementById('think');if(e)e.remove();}
 // Proxy URL — key is hidden on server (Vercel serverless function)
 const GEMINI_URL = '/api/chat';
 
-async function send(){
-  const inp=document.getElementById('chatIn');
-  const q=inp.value.trim();if(!q)return;
-  inp.value='';
-  if(chunks.length===0){chunks=chunk(SAMPLE);setSt('✓ Sample doc loaded ('+chunks.length+' chunks)','ok');}
-  addUser(q);addThinking();
-  const hits=retrieve(q,4);
-  const ctx_text=hits.length?hits.map((h,i)=>`[Chunk ${i+1}]\n${h.c}`).join('\n\n'):'No relevant content found.';
-  const systemPrompt=`You are the NovaLM RAG assistant. Answer ONLY using the document context below. Do not use outside knowledge. If the answer is not in the context, say "I couldn't find that in the provided document."
+async function send() {
+  const inp = document.getElementById('chatIn');
+  const q = inp.value.trim(); if (!q) return;
+  inp.value = '';
+  if (chunks.length === 0) { chunks = chunk(SAMPLE); setSt('✓ Sample doc loaded (' + chunks.length + ' chunks)', 'ok'); }
+
+  addUser(q);
+  const hits = retrieve(q, 4);
+  const ctx_text = hits.length ? hits.map((h, i) => `[Chunk ${i+1}]\n${h.c}`).join('\n\n') : 'No relevant content found.';
+
+  const systemPrompt = `You are the NovaLM RAG assistant. Answer ONLY using the document context below. Do not use outside knowledge. If the answer is not in the context, say "I couldn't find that in the provided document."
 
 --- DOCUMENT CONTEXT ---
 ${ctx_text}
 --- END CONTEXT ---
 
 Be concise and clear. 2-3 short paragraphs max.`;
-  history.push({role:'user', parts:[{text:q}]});
-  try{
-    const res=await fetch('/api/chat',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ model: currentModel, system_instruction:{parts:[{text:systemPrompt}]}, contents: history })
-    });
-    const data=await res.json();
-    rmThinking();
-    if(data.error){addBot('⚠️ API Error: '+esc(data.error.message));history.pop();return;}
-    const reply=data.candidates[0].content.parts[0].text;
-    history.push({role:'model', parts:[{text:reply}]});
-    addBot(reply.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>'),hits);
-  }catch(e){rmThinking();addBot('⚠️ Network error: '+esc(e.message));history.pop();}
-}
 
+  history.push({ role: 'user', parts: [{ text: q }] });
+
+  // create empty bot bubble for streaming
+  const box = document.getElementById('msgs');
+  const row = document.createElement('div'); row.className = 'row';
+  let srcTag = '';
+  if (hits.length) srcTag = `<div class="src-tag">📎 ${hits.length} chunk${hits.length > 1 ? 's' : ''} retrieved · top match ${(hits[0].s * 100).toFixed(0)}%</div>`;
+  row.innerHTML = `<div class="av b">N</div><div class="bub" id="streamBub"><span class="cursor">▋</span>${srcTag}</div>`;
+  box.appendChild(row); box.scrollTop = box.scrollHeight;
+
+  let fullReply = '';
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: currentModel,
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: history
+      })
+    });
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    const bub = document.getElementById('streamBub');
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk_text = decoder.decode(value);
+      const lines = chunk_text.split('\n').filter(l => l.startsWith('data: '));
+
+      for (const line of lines) {
+        const data = line.replace('data: ', '');
+        if (data === '[DONE]') break;
+        if (data.startsWith('[ERROR]')) {
+          bub.innerHTML = '⚠️ ' + esc(data.replace('[ERROR] ', '')) + srcTag;
+          history.pop(); return;
+        }
+        try {
+          const parsed = JSON.parse(data);
+          fullReply += parsed.text;
+          bub.innerHTML = fullReply
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>') + '<span class="cursor">▋</span>' + srcTag;
+          box.scrollTop = box.scrollHeight;
+        } catch {}
+      }
+    }
+
+    // remove cursor when done
+    bub.innerHTML = fullReply
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>') + srcTag;
+
+    history.push({ role: 'model', parts: [{ text: fullReply }] });
+
+  } catch (e) {
+    document.getElementById('streamBub').innerHTML = '⚠️ ' + esc(e.message) + srcTag;
+    history.pop();
+  }
+}
 window.addEventListener('load',()=>{chunks=chunk(SAMPLE);});
 </script>
 </body>
