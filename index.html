@@ -251,6 +251,7 @@ h1 em { color: var(--accent); font-style: italic; }
   </div>
 </div>
 <div class="sb-overlay" id="sbOverlay" onclick="closeSb()"></div>
+</div>
 <button class="sb-toggle" id="sbToggle" onclick="toggleSb()">
   <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
 </button>
@@ -259,16 +260,10 @@ h1 em { color: var(--accent); font-style: italic; }
   <aside class="sb">
     <div class="sb-label">Knowledge Base</div>
     <textarea id="kbText" placeholder="Paste your document text here…"></textarea>
-    <label class="upload-label" for="fileIn">      
-  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+<label class="upload-label" onclick="document.getElementById('fileIn').click()">      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Upload .txt file
     </label>
-    <input 
-  type="file" 
-  id="fileIn" 
-  accept=".txt,.pdf,text/plain,application/pdf"
-  style="display:none"
-  onchange="loadFile(this)">
+    <input type="file" id="fileIn" accept=".txt,.pdf" style="display:none" onchange="loadFile(this)">
     <button class="btn-idx" id="idxBtn" onclick="indexDoc()">Index Document</button>
     <div class="sb-status ok" id="sbStatus">Sample doc preloaded — ask anything!</div>
     <div class="divider"></div>
@@ -505,3 +500,4 @@ window.addEventListener('load',()=>{chunks=chunk(SAMPLE);});
 </script>
 </body>
 </html>
+
