@@ -189,13 +189,12 @@ h1 em { color: var(--accent); font-style: italic; }
   cursor: pointer; align-items: center; justify-content: center;
   transition: transform .2s;
 }
-.sb-overlay .sb-overlay {
+.sb-overlay {
   display: none; position: fixed; inset: 0; z-index: 140;
   background: rgba(0,0,0,0.35);
   pointer-events: none;
 }
-.sb-overlay.show { pointer-events: all; }
-.sb-overlay.show { display: block; }
+.sb-overlay.show { pointer-events: all; display: block; }
 
 @media(max-width:680px){
   .sb-toggle { display: flex; }
@@ -290,7 +289,7 @@ h1 em { color: var(--accent); font-style: italic; }
           <svg width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
         </button>
       </div>
-      <div class="input-hint">Answers come only from your indexed document · powered by Claude</div>
+      <div class="input-hint">Answers come only from your indexed document · powered by NovaLM</div>
     </div>
   </div>
 </div>
@@ -345,7 +344,7 @@ function closeSb(){
 }
 function goHome(){
   document.getElementById('sbToggle').style.display='none';
-closeSb();
+  closeSb();
   document.getElementById('hero').classList.remove('gone');
   document.getElementById('canvas').classList.remove('dim');
   document.getElementById('chat').classList.remove('on');
@@ -481,6 +480,11 @@ Be concise and clear. 2-3 short paragraphs max.`;
     rmThinking();
 
     if (data.error) { addBot('⚠️ API Error: ' + esc(data.error)); history.pop(); return; }
+
+    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+      addBot('⚠️ No response received. The model may have blocked the request or quota was exceeded.');
+      history.pop(); return;
+    }
 
     const reply = data.candidates[0].content.parts[0].text;
     history.push({ role: 'model', parts: [{ text: reply }] });
