@@ -454,7 +454,7 @@ async function send() {
   inp.value = '';
   if (chunks.length === 0) { chunks = chunk(SAMPLE); setSt('✓ Sample doc loaded (' + chunks.length + ' chunks)', 'ok'); }
 
-  addUser(q);
+  addUser(q); addThinking();
   const hits = retrieve(q, 4);
   const ctx_text = hits.length ? hits.map((h, i) => `[Chunk ${i+1}]\n${h.c}`).join('\n\n') : 'No relevant content found.';
 
@@ -468,16 +468,6 @@ Be concise and clear. 2-3 short paragraphs max.`;
 
   history.push({ role: 'user', parts: [{ text: q }] });
 
-  // create empty bot bubble for streaming
-  const box = document.getElementById('msgs');
-  const row = document.createElement('div'); row.className = 'row';
-  let srcTag = '';
-  if (hits.length) srcTag = `<div class="src-tag">📎 ${hits.length} chunk${hits.length > 1 ? 's' : ''} retrieved · top match ${(hits[0].s * 100).toFixed(0)}%</div>`;
-  row.innerHTML = `<div class="av b">N</div><div class="bub" id="streamBub"><span class="cursor">▋</span>${srcTag}</div>`;
-  box.appendChild(row); box.scrollTop = box.scrollHeight;
-
-  let fullReply = '';
-
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
@@ -489,43 +479,18 @@ Be concise and clear. 2-3 short paragraphs max.`;
       })
     });
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    const bub = document.getElementById('streamBub');
+    const data = await res.json();
+    rmThinking();
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      const chunk_text = decoder.decode(value);
-      const lines = chunk_text.split('\n').filter(l => l.startsWith('data: '));
+    if (data.error) { addBot('⚠️ API Error: ' + esc(data.error)); history.pop(); return; }
 
-      for (const line of lines) {
-        const data = line.replace('data: ', '');
-        if (data === '[DONE]') break;
-        if (data.startsWith('[ERROR]')) {
-          bub.innerHTML = '⚠️ ' + esc(data.replace('[ERROR] ', '')) + srcTag;
-          history.pop(); return;
-        }
-        try {
-          const parsed = JSON.parse(data);
-          fullReply += parsed.text;
-          bub.innerHTML = fullReply
-            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\n/g, '<br>') + '<span class="cursor">▋</span>' + srcTag;
-          box.scrollTop = box.scrollHeight;
-        } catch {}
-      }
-    }
-
-    // remove cursor when done
-    bub.innerHTML = fullReply
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n/g, '<br>') + srcTag;
-
-    history.push({ role: 'model', parts: [{ text: fullReply }] });
+    const reply = data.candidates[0].content.parts[0].text;
+    history.push({ role: 'model', parts: [{ text: reply }] });
+    addBot(reply.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'), hits);
 
   } catch (e) {
-    document.getElementById('streamBub').innerHTML = '⚠️ ' + esc(e.message) + srcTag;
+    rmThinking();
+    addBot('⚠️ ' + esc(e.message));
     history.pop();
   }
 }

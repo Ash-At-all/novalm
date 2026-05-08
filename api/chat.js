@@ -6,16 +6,14 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
 
   const { model, contents, system_instruction } = req.body;
 
   try {
-    // ── OpenAI Streaming ──
+    // ── OpenAI ──
     if (model === 'openai') {
       const OPENAI_KEY = process.env.OPENAI_API_KEY;
-      if (!OPENAI_KEY) { res.write(`data: [ERROR] OpenAI key not configured\n\n`); return res.end(); }
+      if (!OPENAI_KEY) return res.status(500).json({ error: 'OpenAI key not configured.' });
 
       const messages = [
         { role: 'system', content: system_instruction.parts[0].text },
@@ -28,38 +26,25 @@ export default async function handler(req, res) {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_KEY}` },
-        body: JSON.stringify({ model: 'gpt-4o-mini', messages, max_tokens: 1000, stream: true })
+        body: JSON.stringify({ model: 'gpt-4o-mini', messages, max_tokens: 1000 })
       });
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
+      const data = await response.json();
+      if (data.error) return res.status(200).json({ error: data.error.message });
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n').filter(l => l.startsWith('data: '));
-        for (const line of lines) {
-          const data = line.replace('data: ', '');
-          if (data === '[DONE]') { res.write(`data: [DONE]\n\n`); break; }
-          try {
-            const parsed = JSON.parse(data);
-            const text = parsed.choices[0]?.delta?.content || '';
-            if (text) res.write(`data: ${JSON.stringify({ text })}\n\n`);
-          } catch {}
-        }
-      }
-      return res.end();
+      return res.status(200).json({
+        candidates: [{ content: { parts: [{ text: data.choices[0].message.content }] } }]
+      });
     }
 
-    // ── Gemini Streaming ──
+    // ── Gemini ──
     const GEMINI_KEY = process.env.GEMINI_API_KEY;
-    if (!GEMINI_KEY) { res.write(`data: [ERROR] Gemini key not configured\n\n`); return res.end(); }
+    if (!GEMINI_KEY) return res.status(500).json({ error: 'Gemini key not configured.' });
 
     const modelName = model === 'pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
 
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse&key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -67,26 +52,10 @@ export default async function handler(req, res) {
       }
     );
 
-    const reader = geminiRes.body.getReader();
-    const decoder = new TextDecoder();
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) { res.write(`data: [DONE]\n\n`); break; }
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n').filter(l => l.startsWith('data: '));
-      for (const line of lines) {
-        try {
-          const parsed = JSON.parse(line.replace('data: ', ''));
-          const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          if (text) res.write(`data: ${JSON.stringify({ text })}\n\n`);
-        } catch {}
-      }
-    }
-    return res.end();
+    const data = await geminiRes.json();
+    return res.status(200).json(data);
 
   } catch (err) {
-    res.write(`data: [ERROR] ${err.message}\n\n`);
-    return res.end();
+    return res.status(500).json({ error: err.message });
   }
 }
