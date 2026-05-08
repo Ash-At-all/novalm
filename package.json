@@ -1,6 +1,7 @@
 {
-  "name": "novalm",
+  "name": "nextlm",
   "version": "1.0.0",
-  "description": "NovaLM - RAG Chatbot with custom knowledge base",
-  "main": "index.html"
+  "description": "NextLM - RAG Chatbot with custom knowledge base",
+  "main": "index.html",
+  "type": "module"
 }
