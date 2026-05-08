@@ -211,6 +211,7 @@ h1 em { color: var(--accent); font-style: italic; }
 }
 
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
@@ -257,7 +258,7 @@ h1 em { color: var(--accent); font-style: italic; }
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Upload .txt file
     </label>
-    <input type="file" id="fileIn" accept=".txt" style="display:none" onchange="loadFile(this)">
+    <input type="file" id="fileIn" accept=".txt,.pdf" style="display:none" onchange="loadFile(this)">
     <button class="btn-idx" id="idxBtn" onclick="indexDoc()">Index Document</button>
     <div class="sb-status ok" id="sbStatus">Sample doc preloaded — ask anything!</div>
     <div class="divider"></div>
@@ -386,8 +387,46 @@ function indexDoc(){
   setTimeout(()=>{chunks=chunk(text);history=[];setSt('✓ '+chunks.length+' chunks ready!','ok');btn.disabled=false;btn.textContent='Re-index';addBot('Knowledge base updated — <strong>'+chunks.length+' chunks indexed</strong>. Ask me anything about your document!');},350);
 }
 function setSt(m,c){const e=document.getElementById('sbStatus');e.textContent=m;e.className='sb-status '+(c||'');}
-function loadFile(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{document.getElementById('kbText').value=e.target.result;setSt('✓ '+f.name+' loaded. Click Index!','ok');};r.readAsText(f);}
+async function loadFile(inp) {
+  const f = inp.files[0];
+  if (!f) return;
 
+  // TXT file
+  if (f.name.endsWith('.txt')) {
+    const r = new FileReader();
+    r.onload = e => {
+      document.getElementById('kbText').value = e.target.result;
+      setSt('✓ ' + f.name + ' loaded. Click Index!', 'ok');
+    };
+    r.readAsText(f);
+    return;
+  }
+
+  // PDF file
+  if (f.name.endsWith('.pdf')) {
+    setSt('📄 Reading PDF...', '');
+    try {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+      const arrayBuffer = await f.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = '';
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const pageText = content.items.map(item => item.str).join(' ');
+        fullText += pageText + '\n';
+      }
+
+      document.getElementById('kbText').value = fullText;
+      setSt('✓ ' + f.name + ' (' + pdf.numPages + ' pages) loaded. Click Index!', 'ok');
+    } catch (err) {
+      setSt('⚠ PDF read failed: ' + err.message, '');
+    }
+  }
+}
 function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function addUser(t){const b=document.getElementById('msgs');const d=document.createElement('div');d.className='row u';d.innerHTML=`<div class="av u">U</div><div class="bub">${esc(t)}</div>`;b.appendChild(d);b.scrollTop=b.scrollHeight;}
 function addBot(html,srcs){
