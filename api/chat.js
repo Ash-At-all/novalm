@@ -48,12 +48,26 @@ export default async function handler(req, res) {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ system_instruction, contents }),
+        body: JSON.stringify({
+          system_instruction,
+          contents,
+          generationConfig: { thinkingConfig: { thinkingBudget: 0 } }
+        }),
       }
     );
 
     const data = await geminiRes.json();
-    return res.status(200).json(data);
+    if (data.error) return res.status(200).json({ error: data.error.message });
+
+    // Gemini 2.5 may return thinking parts (thought:true) before the real answer.
+    // Find the first part that is NOT a thought part.
+    const parts = data.candidates?.[0]?.content?.parts || [];
+    const replyPart = parts.find(p => !p.thought && p.text) || parts[0];
+    const replyText = replyPart?.text || '';
+
+    return res.status(200).json({
+      candidates: [{ content: { parts: [{ text: replyText }] } }]
+    });
 
   } catch (err) {
     return res.status(500).json({ error: err.message });
