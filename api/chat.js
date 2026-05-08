@@ -28,7 +28,7 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${COHERE_KEY}`
       },
       body: JSON.stringify({
-        model: 'command-r-plus',
+        model: 'command-a-03-2025',
         message: lastMessage,
         chat_history: chatHistory,
         preamble: system_instruction.parts[0].text,
