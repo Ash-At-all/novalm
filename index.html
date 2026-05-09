@@ -115,6 +115,11 @@ h1 em{color:var(--accent);font-style:italic;}
     <a href="https://pro-kart-e-commerce.vercel.app/">ProKart</a>
     <a href="https://github.com/Ash-At-all">GitHub</a>
   </div>
+  <label for="fileIn" style="display:none;align-items:center;gap:6px;font-size:.82rem;color:var(--accent);background:rgba(91,110,245,.08);border:.5px solid rgba(91,110,245,.3);border-radius:100px;padding:.35rem 1rem;cursor:pointer;white-space:nowrap;" id="navUpload">
+  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+  Upload
+</label>
+<input type="file" id="fileIn" accept=".txt,.pdf" style="display:none" onchange="loadFile(this)">
 </nav>
 
 <canvas id="canvas"></canvas>
@@ -145,11 +150,6 @@ h1 em{color:var(--accent);font-style:italic;}
   <aside class="sb" id="sidebar">
     <div class="sb-label">Knowledge Base</div>
     <textarea id="kbText" placeholder="Paste your document text here…"></textarea>
-    <label class="upload-label" for="fileIn">
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      Upload .txt / .pdf
-    </label>
-    <input type="file" id="fileIn" accept=".txt,.pdf" style="display:none" onchange="loadFile(this)">
     <button class="btn-idx" id="idxBtn" onclick="indexDoc()">Index Document</button>
     <div class="sb-status ok" id="sbStatus">Sample doc preloaded — ask anything!</div>
     <div class="divider"></div>
@@ -197,6 +197,7 @@ init();
 <!-- PAGE TRANSITIONS -->
 <script>
 function openChat(){
+  document.getElementById('navUpload').style.display='flex';
   document.getElementById('hero').classList.add('gone');
   document.getElementById('canvas').classList.add('dim');
   document.getElementById('chat').classList.add('on');
@@ -214,6 +215,7 @@ function closeSb(){
   document.getElementById('sbOverlay').style.display='none';
 }
 function goHome(){
+  document.getElementById('navUpload').style.display='none';
   document.getElementById('hero').classList.remove('gone');
   document.getElementById('canvas').classList.remove('dim');
   document.getElementById('chat').classList.remove('on');
