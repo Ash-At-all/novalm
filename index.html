@@ -113,6 +113,7 @@ h1 em{color:var(--accent);font-style:italic;}
       Upload
     </label>
     <input type="file" id="fileIn" accept=".txt,.pdf" style="display:none" onchange="loadFile(this)">
+    <button id="clearBtn" onclick="clearChat()" style="display:none;font-size:.75rem;color:var(--muted);background:transparent;border:.5px solid rgba(0,0,0,.1);border-radius:100px;padding:.3rem .8rem;cursor:pointer;">🗑 Clear</button>
 
     <!-- Model selector -->
     <div class="nav-model" id="navModel">
@@ -199,6 +200,7 @@ init();
 <!-- PAGE + KB TRANSITIONS -->
 <script>
 function openChat(){
+  document.getElementById('clearBtn').style.display='flex';
   document.getElementById('hero').classList.add('gone');
   document.getElementById('canvas').classList.add('dim');
   document.getElementById('chat').classList.add('on');
@@ -210,6 +212,7 @@ function openChat(){
   setTimeout(()=>document.getElementById('chatIn').focus(),650);
 }
 function goHome(){
+  document.getElementById('clearBtn').style.display='none';
   document.getElementById('hero').classList.remove('gone');
   document.getElementById('canvas').classList.remove('dim');
   document.getElementById('chat').classList.remove('on');
@@ -237,6 +240,24 @@ function closeKb(){
 <script>
 let chunks=[],history=[],currentModel='flash';
 const SAMPLE="Mujahid Shaikh is a final-year BCA student Aurangabad Maharashtra. He wants to become an AI ML Engineer. He made NovaLM and ProKart projects. Instagram is mujahid_1.0x link https://www.instagram.com/mujahid_1.0x GitHub is Ash-At-all link https://github.com/Ash-At-all ProKart link https://pro-kart-e-commerce.vercel.app NovaLM link https://novalm.vercel.app. He plays BGMI and Valorant. He writes Urdu Hindi shayari. NovaLM is a RAG chatbot with Gemini and GPT support. ProKart is an e-commerce platform built with FastAPI and MongoDB.";
+function saveChat(){
+  localStorage.setItem('nova_history', JSON.stringify(history));
+  localStorage.setItem('nova_msgs', document.getElementById('msgs').innerHTML);
+}
+
+function loadChat(){
+  const h = localStorage.getItem('nova_history');
+  const m = localStorage.getItem('nova_msgs');
+  if(h) history = JSON.parse(h);
+  if(m) document.getElementById('msgs').innerHTML = m;
+}
+
+function clearChat(){
+  localStorage.removeItem('nova_history');
+  localStorage.removeItem('nova_msgs');
+  history=[];
+  document.getElementById('msgs').innerHTML='<div class="row"><div class="av b">N</div><div class="bub">Hi! I am the <strong>NovaLM RAG bot</strong>. Ask me anything! 📄</div></div>';
+}
 
 function switchModel(val){
   currentModel=val;
@@ -367,9 +388,10 @@ function addUser(t){
 function addBot(html,srcs){
   const b=document.getElementById('msgs');
   const d=document.createElement('div');d.className='row';
-  let s='';if(srcs&&srcs.length)s='<div class="src-tag">📎 '+srcs.length+' chunk'+(srcs.length>1?'s':'')+' · top '+( srcs[0].s*100).toFixed(0)+'%</div>';
+  let s='';if(srcs&&srcs.length)s='<div class="src-tag">📎 '+srcs.length+' chunk'+(srcs.length>1?'s':'')+' · top '+(srcs[0].s*100).toFixed(0)+'%</div>';
   d.innerHTML='<div class="av b">N</div><div class="bub">'+html+s+'</div>';
   b.appendChild(d);b.scrollTop=b.scrollHeight;
+  saveChat();
 }
 
 function addThinking(){
@@ -482,8 +504,10 @@ history.push({role:'user',parts:[{text:q}]});
     addBot(reply.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>'),hits);
   }catch(e){rmThinking();addBot('⚠️ '+esc(e.message));history.pop();}
 }
-
-window.addEventListener('load',()=>{chunks=chunk(Array.isArray(SAMPLE)?SAMPLE.join('\n\n'):SAMPLE);});
+window.addEventListener('load',()=>{
+  chunks=chunk(SAMPLE);
+  loadChat();
+});
 </script>
 </body>
 </html>
