@@ -385,12 +385,7 @@ async function send(){
   const inp=document.getElementById('chatIn');
   const q=inp.value.trim();if(!q)return;
   inp.value='';
-  if(chunks.length===0){
-  addBot('Please upload a document first using the Upload button above! 📄');
-  rmThinking();
-  history.pop();
-  return;
-}
+  if(chunks.length===0){chunks=chunk(SAMPLE);}
   addUser(q);addThinking();
   const hits=retrieve(q,4);
   const ctx=hits.length?hits.map((h,i)=>'[Chunk '+(i+1)+']\n'+h.c).join('\n\n'):'No relevant content found.';
