@@ -237,21 +237,78 @@ function switchModel(val){
   addBot('Switched to <strong>'+names[val]+'</strong>. Conversation reset!');
 }
 
-const SAMPLE=`NovaLM is an open educational platform teaching language model fundamentals through interactive visualizations.
+const SAMPLE=`# About Mujahid Shaikh
 
-Tokenization: Raw text is split into tokens using Byte Pair Encoding (BPE). Each token maps to a high-dimensional embedding vector capturing semantic meaning. Vocabulary size typically ranges from 32k to 100k tokens.
+Mujahid Shaikh is a final-year BCA student at Vidyadhan College, Chhatrapati Sambhajinagar (Aurangabad), affiliated with Dr. Babasaheb Ambedkar Marathwada University (BAMU). He is from Sillod, Aurangabad district, Maharashtra.
 
-Attention Mechanism: The attention mechanism uses queries, keys, and values. A query vector is compared against all key vectors using dot-product similarity, then softmax-normalized into attention weights. Multi-head attention runs several operations in parallel for richer representations.
+## Career Goals
+Mujahid's long-term goal is to become an AI/ML Engineer. He plans to pursue MCA after BCA, and eventually a Master's in Computer Science in Germany (targeting Winter 2027). He is interested in TU Kaiserslautern.
 
-Transformer Architecture: A transformer stacks encoder or decoder blocks. Each block has multi-head self-attention followed by a feed-forward network. Residual connections and layer normalization stabilize training.
+## Skills
+- Python (intermediate level), FastAPI, MongoDB, JavaScript, HTML, CSS
+- Currently learning NumPy, Pandas for Data Science
+- Experience with RAG, LLMs, Gemini API, OpenAI API, Cohere API
+- Built ProKart — a full-stack e-commerce project with FastAPI backend, Vanilla JS frontend, MongoDB Atlas, deployed on Vercel/Render
 
-Pretraining: Language models are pretrained by predicting the next token (Causal LM) or filling masked tokens (Masked LM). The loss is cross-entropy between predicted and true token distributions.
+## Projects
+1. NovaLM - RAG-based chatbot with multi-model support (Gemini, GPT-4o mini, Cohere)
+2. ProKart - Full-stack e-commerce platform with JWT auth, product scraper, MongoDB Atlas
 
-Fine-Tuning and RLHF: After pretraining, models are fine-tuned on curated data (SFT). RLHF trains a reward model on human preferences and uses PPO or DPO to align the model.
+## Education
+- BCA Final Year, Vidyadhan College, BAMU University
 
-Inference and Sampling: The model outputs a probability distribution over vocabulary. Greedy decoding picks the top token. Beam search explores multiple paths. Top-k and top-p nucleus sampling add controlled randomness via temperature.
+## Interests
+- Plays BGMI and Valorant
 
-RAG (Retrieval-Augmented Generation): RAG improves LLM accuracy by retrieving relevant document chunks at query time and injecting them as context. This grounds answers in real data, reducing hallucination. NovaLM uses TF-IDF cosine similarity for in-browser retrieval.`;
+
+## Contact
+- Instagram: https://www.instagram.com/mujahid_1.0x/
+- GitHub: https://github.com/Ash-At-all
+- ProKart: https://pro-kart-e-commerce.vercel.app/
+- NovaLM: https://novalm.vercel.app/
+
+## General AI Knowledge
+
+Tokenization: Raw text is split into tokens using Byte Pair Encoding (BPE). Each token maps to a high-dimensional embedding vector. Vocabulary size typically ranges from 32k to 100k tokens.
+
+Attention Mechanism: Uses queries, keys, and values. Query vector compared against key vectors using dot-product similarity, softmax-normalized into attention weights. Multi-head attention runs several operations in parallel.
+
+Transformer Architecture: Stacks encoder or decoder blocks. Each block has multi-head self-attention followed by a feed-forward network. Residual connections and layer normalization stabilize training.
+
+RAG (Retrieval-Augmented Generation): Improves LLM accuracy by retrieving relevant document chunks at query time. Grounds answers in real data, reducing hallucination. NovaLM uses TF-IDF cosine similarity for retrieval.
+
+Mujahid kaun hai?
+Mujahid Shaikh ek BCA final year student hain jo AI/ML Engineer banna chahte hain. Woh Aurangabad, Maharashtra se hain.
+
+Tumhara favorite game kya hai?
+Mujahid BGMI aur Valorant khelna pasand karta hai.
+
+Tum kya seekh rahe ho abhi?
+Abhi NumPy, Pandas seekh raha hoon Data Science ke liye. Saath mein MCA entrance exam TSICET aur MAH MCA CET ki taiyari bhi chal rahi hai.
+
+Tumhara dream kya hai?
+Abhi to mera dream hai koi acche se collage me MCA karna
+
+ProKart kya hai?
+ProKart ek full-stack e-commerce platform hai jo Mujahid ne banaya. FastAPI backend, Vanilla JS frontend, MongoDB Atlas database, Vercel aur Render pe deploy kiya hua hai.
+
+NovaLM kya hai?
+NovaLM ek RAG-based AI chatbot hai jo Mujahid ne banaya. Isme Gemini Flash, Gemini Pro aur GPT-4o mini model support hai. Documents upload karke unse sawaal pooch sakte ho.
+
+Tumhari Python skill kaisi hai?
+Python intermediate level par hai. FastAPI ke saath backend development kiya hai. Abhi Data Science ke liye NumPy aur Pandas seekh raha hoon.
+
+Germany mein padhna kyun chahte ho?
+Germany mein world-class universities hain, tuition fees bhi kam hain. BAMU ka H+ Anabin rating hai jo German universities mein recognition deta hai bina extra process ke.
+
+Kya tum freelancing karte ho?
+Haan, Python automation aur web scraping Fiverr pe offer karta hoon near-term income ke liye.
+
+Tumhara Instagram kya hai?
+Instagram: https://www.instagram.com/mujahid_1.0x/
+
+Tumhara GitHub kya hai?
+GitHub: https://github.com/Ash-At-all`;`;
 
 function chunk(text,size=380,ov=70){const w=text.split(/\s+/).filter(Boolean),out=[];for(let i=0;i<w.length;i+=size-ov){const c=w.slice(i,i+size).join(' ');if(c.trim())out.push(c.trim());if(i+size>=w.length)break;}return out;}
 function tok(t){return t.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(Boolean);}
