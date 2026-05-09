@@ -102,6 +102,11 @@ h1 em{color:var(--accent);font-style:italic;}
 <nav>
   <div class="logo">Nova<span>LM</span></div>
   <div class="nav-mid">
+    <div id="navSocial" style="display:flex;align-items:center;gap:1rem;">
+  <a href="https://www.instagram.com/mujahid_1.0x/?hl=en" target="_blank" style="font-size:.82rem;color:var(--muted);text-decoration:none;">Instagram</a>
+  <a href="https://github.com/Ash-At-all" target="_blank" style="font-size:.82rem;color:var(--muted);text-decoration:none;">GitHub</a>
+  <a href="https://pro-kart-e-commerce.vercel.app/" target="_blank" style="font-size:.82rem;color:var(--muted);text-decoration:none;">ProKart</a>
+  </div>
     <!-- Upload -->
     <label class="nav-upload" id="navUpload" for="fileIn">
       <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -201,6 +206,7 @@ function openChat(){
   document.getElementById('navUpload').style.display='flex';
   document.getElementById('navModel').style.display='flex';
   document.getElementById('navKb').style.display='flex';
+  document.getElementById('navSocial').style.display='none';
   setTimeout(()=>document.getElementById('chatIn').focus(),650);
 }
 function goHome(){
@@ -211,6 +217,7 @@ function goHome(){
   document.getElementById('navUpload').style.display='none';
   document.getElementById('navModel').style.display='none';
   document.getElementById('navKb').style.display='none';
+  document.getElementById('navSocial').style.display='flex';
   closeKb();
 }
 function toggleKb(){
