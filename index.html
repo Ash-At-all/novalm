@@ -246,7 +246,7 @@ function switchModel(val){
   const inp = document.getElementById('chatIn');
   const q = inp.value.trim(); if (!q) return;
   inp.value = '';
-  if (chunks.length === 0) { chunks = chunk(SAMPLE); setSt('✓ Sample doc loaded (' + chunks.length + ' chunks)', 'ok'); }
+  if(chunks.length===0){chunks=chunk(Array.isArray(SAMPLE)?SAMPLE.join('\n\n'):SAMPLE);}
 
   addUser(q); addThinking();
   const hits = retrieve(q, 4);
@@ -483,7 +483,7 @@ history.push({role:'user',parts:[{text:q}]});
   }catch(e){rmThinking();addBot('⚠️ '+esc(e.message));history.pop();}
 }
 
-window.addEventListener('load',()=>{chunks=chunk(SAMPLE);});
+window.addEventListener('load',()=>{chunks=chunk(Array.isArray(SAMPLE)?SAMPLE.join('\n\n'):SAMPLE);});
 </script>
 </body>
 </html>
