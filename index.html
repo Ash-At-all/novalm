@@ -236,6 +236,7 @@ function closeKb(){
 <!-- RAG ENGINE -->
 <script>
 let chunks=[],history=[],currentModel='flash';
+const SAMPLE="Mujahid Shaikh is a final-year BCA student Aurangabad Maharashtra. He wants to become an AI ML Engineer. He made NovaLM and ProKart projects. Instagram is mujahid_1.0x link https://www.instagram.com/mujahid_1.0x GitHub is Ash-At-all link https://github.com/Ash-At-all ProKart link https://pro-kart-e-commerce.vercel.app NovaLM link https://novalm.vercel.app. He plays BGMI and Valorant. He writes Urdu Hindi shayari. NovaLM is a RAG chatbot with Gemini and GPT support. ProKart is an e-commerce platform built with FastAPI and MongoDB.";
 
 function switchModel(val){
   currentModel=val;
@@ -251,8 +252,7 @@ function switchModel(val){
   addUser(q); addThinking();
   const hits = retrieve(q, 4);
   const ctx_text = hits.length ? hits.map((h, i) => `[Chunk ${i+1}]\n${h.c}`).join('\n\n') : 'No relevant content found.';
-
-const systemPrompt = `
+  const systemPrompt = `
 You are NovaLM, an AI-powered RAG assistant.
 
 IMPORTANT RULES:
