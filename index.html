@@ -235,30 +235,75 @@ function switchModel(val){
   history=[];
   const names={flash:'⚡ Gemini Flash',pro:'🧠 Gemini Pro',openai:'🤖 GPT-4o mini'};
   addBot('Switched to <strong>'+names[val]+'</strong>. Conversation reset!');
-}
-const SAMPLE=[
-"About Mujahid Shaikh. Mujahid Shaikh is a final-year BCA student Aurangabad affiliated with BAMU. He is from Sillod Aurangabad district Maharashtra.",
-"Career Goals. Mujahid wants to become an AI ML Engineer. He plans to pursue MCA after BCA and eventually Masters in Computer Science.",
-"Skills. Python intermediate level FastAPI MongoDB JavaScript HTML CSS. Learning NumPy Pandas for Data Science. Experience with RAG LLMs Gemini API OpenAI API Cohere API.",
-"Projects. NovaLM is a RAG based chatbot with multi model support Gemini GPT-4o mini Cohere. ProKart is a full stack e-commerce platform with FastAPI backend Vanilla JS frontend MongoDB Atlas deployed on Vercel and Render.",
-"Education. BCA Final Year Vidyadhan College BAMU University.",
-"Social Media and Contact. Instagram handle is mujahid_1.0x link is https://www.instagram.com/mujahid_1.0x. GitHub username is Ash-At-all link is https://github.com/Ash-At-all. ProKart project link is https://pro-kart-e-commerce.vercel.app. NovaLM link is https://novalm.vercel.app.",
-"FAQ. Mujahid kaun hai. Mujahid Shaikh ek BCA final year student hain jo AI ML Engineer banna chahte hain. Woh Aurangabad Maharashtra se hain. Ek dum desi banda hai jo Germany mein jaana chahta hai.",
-"FAQ. Tumhara favorite game kya hai. Mujahid BGMI aur Valorant khelna pasand karta hai. Aur haan jab game mein drop hota hai toh coding karta hai frustration nikalne ke liye.",
-"FAQ. ProKart kya hai. ProKart ek full stack e-commerce platform hai jo Mujahid ne banaya. FastAPI backend Vanilla JS frontend MongoDB Atlas database Vercel aur Render pe deploy kiya hua hai. Basically Amazon ka chota bhai samjho.",
-"FAQ. NovaLM kya hai. NovaLM ek RAG based AI chatbot hai jo Mujahid ne banaya. Isme Gemini Flash Gemini Pro aur GPT-4o mini model support hai. Apna document daalo aur poochho kuch bhi.",
-"FAQ. Germany mein padhna kyun chahte ho. Bhai free education hai almost. Aur Germany mein world class universities hain. BAMU ka H plus Anabin rating hai so recognition mein koi problem nahi.",
-"FAQ. Kya tum brilliant ho. Haan bilkul. Aur agar koi doubt kare toh NovaLM banana ka proof kaafi hai. Waise humble bhi hain hum.",
-"FAQ. Girlfriend hai kya. Bhai abhi toh sirf Python ke saath relationship hai. Aur kabhi kabhi MongoDB bhi problematic rehta hai. Career pehle.",
-"FAQ. Neend kitni lete ho. Officially 8 ghante. Unofficially jab tak Claude se code fix nahi ho jaata tab tak neend nahi aati.",
-"FAQ. Tumhara Instagram kya hai. Instagram par miloge mujhe mujahid_1.0x ke naam se. Follow karo bhai kuch accha content milega.",
-"FAQ. Shayari likhte ho kya. Haan Mujahid Urdu aur Hindi mein shayari likhta hai. Dil mein feelings hain aur keyboard pe code. Dono saath chalte hain.",
-"FAQ. Kya tum busy rehte ho. 24 ghante mein se 23 ghante coding debugging aur chai peena. Ek ghanta BGMI. Balance hi zindagi hai.",
-"RAG Retrieval Augmented Generation improves LLM accuracy by retrieving relevant document chunks at query time. Grounds answers in real data reducing hallucination. NovaLM uses TF-IDF cosine similarity for retrieval.",
-"Tokenization. Raw text split into tokens using Byte Pair Encoding BPE. Each token maps to high dimensional embedding vector. Vocabulary size typically 32k to 100k tokens.",
-"Attention Mechanism uses queries keys and values. Query vector compared against key vectors using dot product similarity softmax normalized into attention weights. Multi head attention runs several operations in parallel.",
-].join('\n\n');
+}async function send() {
+  const inp = document.getElementById('chatIn');
+  const q = inp.value.trim(); if (!q) return;
+  inp.value = '';
+  if (chunks.length === 0) { chunks = chunk(SAMPLE); setSt('✓ Sample doc loaded (' + chunks.length + ' chunks)', 'ok'); }
 
+  addUser(q); addThinking();
+  const hits = retrieve(q, 4);
+  const ctx_text = hits.length ? hits.map((h, i) => `[Chunk ${i+1}]\n${h.c}`).join('\n\n') : 'No relevant content found.';
+
+const systemPrompt = `
+You are NovaLM, an AI-powered RAG assistant.
+
+IMPORTANT RULES:
+- Answer using the provided document context whenever possible.
+- If information is not inside the document, you may answer normally for casual questions.
+- Be friendly, modern, and concise.
+- Keep answers clean and readable.
+
+IDENTITY:
+- Your name is NovaLM.
+- You were created by Mujahid.
+- Your admin/developer is Mujahid.
+
+SOCIAL MEDIA:
+- Instagram:
+  https://www.instagram.com/mujahid_1.0x/?hl=en
+
+- GitHub:
+  https://github.com/Ash-At-all
+
+- Project Website:
+  https://pro-kart-e-commerce.vercel.app/
+
+BEHAVIOR:
+- If someone asks "who made you",
+  say:
+  "I was created by Mujahid."
+
+- If someone asks for admin social media,
+  share the Instagram and GitHub links.
+
+- If someone says "how are you",
+  respond casually and naturally.
+
+- If document context exists,
+  prioritize document-based answers.
+
+- if someone say "tumko kisne banaya",
+  say:
+  "mujhe Mujahid ne banaya,Ab ye mat puch lena kaise banaya😭 Aap instagram likho me uski id deta"
+  if someone say "Kon ho tum",
+  say:
+  "me ek Ai model hu,mera naam NovaLM hai, Or kuch??🙎‍♂️"
+  if someone say "hy",
+  say:
+  "Hello bhaiyya😊"
+  if someone say "hi",
+  say: 
+  "Hi jaldi bol kal subeh aapki city ke liye nikalna hai🙈"
+
+--- DOCUMENT CONTEXT ---
+${ctx_text}
+--- END CONTEXT ---
+
+Be concise and clear. 2-3 short paragraphs max.`;
+
+  history.push({ role: 'user', parts: [{ text: q }] });
+}
 function chunk(text,size=380,ov=70){const w=text.split(/\s+/).filter(Boolean),out=[];for(let i=0;i<w.length;i+=size-ov){const c=w.slice(i,i+size).join(' ');if(c.trim())out.push(c.trim());if(i+size>=w.length)break;}return out;}
 function tok(t){return t.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(Boolean);}
 function tf(ts){const m={};ts.forEach(t=>m[t]=(m[t]||0)+1);const n=ts.length;Object.keys(m).forEach(k=>m[k]/=n);return m;}
@@ -329,6 +374,7 @@ function addThinking(){
 function rmThinking(){const e=document.getElementById('think');if(e)e.remove();}
 
 async function send(){
+
   const inp=document.getElementById('chatIn');
   const q=inp.value.trim();if(!q)return;
   inp.value='';
@@ -336,8 +382,58 @@ async function send(){
   addUser(q);addThinking();
   const hits=retrieve(q,4);
   const ctx=hits.length?hits.map((h,i)=>'[Chunk '+(i+1)+']\n'+h.c).join('\n\n'):'No relevant content found.';
-  const sys='You are the NovaLM RAG assistant. Answer ONLY using the document context below. Do not use outside knowledge. If the answer is not in the context, say "I couldn\'t find that in the provided document."\n\n--- DOCUMENT CONTEXT ---\n'+ctx+'\n--- END CONTEXT ---\n\nBe concise and clear. 2-3 short paragraphs max.';
-  history.push({role:'user',parts:[{text:q}]});
+  const sys=`You are NovaLM, an AI-powered RAG assistant created by Mujahid.
+
+IMPORTANT RULES:
+- Answer using the provided document context whenever possible.
+- If information is not in the document, answer normally for casual questions.
+- Be friendly, modern, and concise.
+
+IDENTITY:
+- Your name is NovaLM.
+- You were created by Mujahid.
+
+SOCIAL MEDIA:
+- Instagram: https://www.instagram.com/mujahid_1.0x/?hl=en
+- GitHub: https://github.com/Ash-At-all
+- ProKart Project: https://pro-kart-e-commerce.vercel.app/
+
+BEHAVIOR:
+- If someone asks "who made you" → say "I was created by Mujahid."
+- If someone asks for social media → share Instagram and GitHub links.
+- If someone says "how are you" → respond casually and naturally.
+- If someone says "tumko kisne banaya" → say "mujhe Mujahid ne banaya, Ab ye mat puchna kaise banaya😭 Aap Instagram likho me uski id deta hoon"
+- If someone says "kon ho tum" → say "me ek AI model hu, mera naam NovaLM hai, Or kuch??🙎‍♂️"
+- If someone says "hy" or "hey" → say "Hello bhaiyya😊"
+- If someone says "hi" → say "Hi jaldi bol kal subeh aapki city ke liye nikalna hai🙈"
+- If document context exists, prioritize document-based answers.
+"About Mujahid Shaikh. Mujahid Shaikh is a final-year BCA student Aurangabad affiliated with BAMU. He is from Sillod Aurangabad district Maharashtra.",
+"Career Goals. Mujahid wants to become an AI ML Engineer. He plans to pursue MCA after BCA and eventually Masters in Computer Application.",
+"Skills. Python intermediate level FastAPI MongoDB JavaScript HTML CSS. Learning NumPy Pandas for Data Science. Experience with RAG LLMs Gemini API OpenAI API Cohere API.",
+"Projects. NovaLM is a RAG based chatbot with multi model support Gemini GPT-4o mini Cohere. ProKart is a full stack e-commerce platform with FastAPI backend Vanilla JS frontend MongoDB Atlas deployed on Vercel and Render.",
+"Education. BCA Final Year BAMU University.",
+"Social Media and Contact. Instagram handle is mujahid_1.0x link is https://www.instagram.com/mujahid_1.0x. GitHub username is Ash-At-all link is https://github.com/Ash-At-all. ProKart project link is https://pro-kart-e-commerce.vercel.app. NovaLM link is https://novalm.vercel.app.",
+"FAQ. Mujahid kaun hai. Mujahid Shaikh ek BCA final year student hain jo AI ML Engineer banna chahte hain. Woh Aurangabad Maharashtra se hain. Ek dum desi banda hai jo Germany mein jaana chahta hai.",
+"FAQ. Tumhara favorite game kya hai. Mujahid BGMI aur Valorant khelna pasand karta hai. Aur haan jab game mein drop hota hai toh coding karta hai frustration nikalne ke liye.",
+"FAQ. Tumhara dream kya hai.  mujhe bs AI Engineer banna hai.",
+"FAQ. ProKart kya hai. ProKart ek full stack e-commerce platform hai jo Mujahid ne banaya. FastAPI backend Vanilla JS frontend MongoDB Atlas database Vercel aur Render pe deploy kiya hua hai. Basically Amazon ka chota bhai samjho.",
+"FAQ. NovaLM kya hai. NovaLM ek RAG based AI chatbot hai jo Mujahid ne banaya. Isme Gemini Flash Gemini Pro aur GPT-4o mini model support hai. Apna document daalo aur poochho kuch bhi.",
+"FAQ. Kya tum brilliant ho. Haan bilkul. Aur agar koi doubt kare toh NovaLM banana ka proof kaafi hai. Waise humble bhi hain hum.",
+"FAQ. Girlfriend hai kya. Bhai abhi toh sirf Python ke saath relationship hai. Aur kabhi kabhi MongoDB bhi problematic rehta hai. Career pehle.",
+"FAQ. Neend kitni lete ho. Officially 8 ghante. Unofficially jab tak Claude se code fix nahi ho jaata tab tak neend nahi aati.",
+"FAQ. Tumhara Instagram kya hai. Instagram par miloge mujhe mujahid_1.0x ke naam se. Follow karo bhai kuch accha content milega.",
+"FAQ. Shayari likhte ho kya. Haan Mujahid Urdu aur Hindi mein shayari likhta hai. Dil mein feelings hain aur keyboard pe code. Dono saath chalte hain.",
+"FAQ. Kya tum busy rehte ho. 24 ghante mein se 23 ghante coding debugging aur chai peena. Ek ghanta BGMI. Balance hi zindagi hai.",
+"RAG Retrieval Augmented Generation improves LLM accuracy by retrieving relevant document chunks at query time. Grounds answers in real data reducing hallucination. NovaLM uses TF-IDF cosine similarity for retrieval.",
+"Tokenization. Raw text split into tokens using Byte Pair Encoding BPE. Each token maps to high dimensional embedding vector. Vocabulary size typically 32k to 100k tokens.",
+"Attention Mechanism uses queries keys and values. Query vector compared against key vectors using dot product similarity softmax normalized into attention weights. Multi head attention runs several operations in parallel.",
+
+
+--- DOCUMENT CONTEXT ---
+${ctx}
+--- END CONTEXT ---
+
+Be concise and clear. 2-3 short paragraphs max.`;  history.push({role:'user',parts:[{text:q}]});
   try{
     const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:currentModel,system_instruction:{parts:[{text:sys}]},contents:history})});
     const data=await res.json();
