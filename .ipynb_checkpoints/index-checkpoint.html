@@ -113,10 +113,17 @@ h1 em{color:var(--accent);font-style:italic;}
       Upload
     </label>
     <input type="file" id="fileIn" accept=".txt,.pdf" style="display:none" onchange="loadFile(this)">
+    <button id="clearBtn" onclick="clearChat()" style="display:none;font-size:.75rem;color:var(--muted);background:transparent;border:.5px solid rgba(0,0,0,.1);border-radius:100px;padding:.3rem .8rem;cursor:pointer;">🗑 Clear</button>
+
     <!-- Model selector -->
-   <button id="settingsBtn" onclick="toggleSettings()" style="display:none;width:34px;height:34px;border-radius:50%;background:rgba(91,110,245,.08);border:.5px solid var(--border);cursor:pointer;align-items:center;justify-content:center;color:var(--ink);">
-  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-  </button>
+    <div class="nav-model" id="navModel">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+      <select id="modelSelect" onchange="switchModel(this.value)">
+        <option value="flash">⚡ Gemini Flash</option>
+        <option value="pro">🧠 Gemini Pro</option>
+        <option value="openai">🤖 GPT-4o mini</option>
+      </select>
+    </div>
 
     <!-- KB toggle -->
     <button class="nav-kb" id="navKb" onclick="toggleKb()">
@@ -193,7 +200,6 @@ init();
 <!-- PAGE + KB TRANSITIONS -->
 <script>
 function openChat(){
-  document.getElementById('settingsBtn').style.display='flex';
   document.getElementById('clearBtn').style.display='flex';
   document.getElementById('hero').classList.add('gone');
   document.getElementById('canvas').classList.add('dim');
@@ -206,8 +212,6 @@ function openChat(){
   setTimeout(()=>document.getElementById('chatIn').focus(),650);
 }
 function goHome(){
-  document.getElementById('settingsBtn').style.display='none';
-toggleSettings(); // close if open
   document.getElementById('clearBtn').style.display='none';
   document.getElementById('hero').classList.remove('gone');
   document.getElementById('canvas').classList.remove('dim');
@@ -253,42 +257,6 @@ function clearChat(){
   localStorage.removeItem('nova_msgs');
   history=[];
   document.getElementById('msgs').innerHTML='<div class="row"><div class="av b">N</div><div class="bub">Hi! I am the <strong>NovaLM RAG bot</strong>. Ask me anything! 📄</div></div>';
-}
-function toggleSettings(){
-  const popup = document.getElementById('settingsPopup');
-  const overlay = document.getElementById('settingsOverlay');
-  const isOpen = popup.style.display === 'block';
-  popup.style.display = isOpen ? 'none' : 'block';
-  overlay.style.display = isOpen ? 'none' : 'block';
-}
-
-let isDark = false;
-function toggleDark(){
-  isDark = !isDark;
-  const toggle = document.getElementById('darkToggle');
-  const thumb = document.getElementById('darkThumb');
-  if(isDark){
-    document.body.style.background = '#0f0f13';
-    document.querySelector('.msgs').style.background = '#1c1c24';
-    document.querySelector('.input-bar').style.background = '#1c1c24';
-    document.querySelector('.input-wrap').style.background = '#2a2a35';
-    document.querySelector('.input-wrap').style.borderColor = 'rgba(255,255,255,0.1)';
-    document.querySelector('#chatIn').style.color = '#fff';
-    document.getElementById('settingsPopup').style.background = '#1c1c24';
-    document.getElementById('settingsPopup').style.color = '#fff';
-    toggle.style.background = '#5b6ef5';
-    thumb.style.left = '21px';
-  } else {
-    document.body.style.background = '#f5f4f0';
-    document.querySelector('.msgs').style.background = '#fff';
-    document.querySelector('.input-bar').style.background = '#fff';
-    document.querySelector('.input-wrap').style.background = '#f7f7f8';
-    document.querySelector('.input-wrap').style.borderColor = 'rgba(0,0,0,0.1)';
-    document.querySelector('#chatIn').style.color = '#0f0f13';
-    document.getElementById('settingsPopup').style.background = '#fff';
-    toggle.style.background = '#e5e5e5';
-    thumb.style.left = '3px';
-  }
 }
 
 function switchModel(val){
@@ -541,33 +509,5 @@ window.addEventListener('load',()=>{
   loadChat();
 });
 </script>
-<div id="settingsOverlay" onclick="toggleSettings()" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.3);"></div>
-
-<div id="settingsPopup" style="display:none;position:fixed;top:65px;right:1rem;z-index:600;width:260px;background:#fff;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.15);border:.5px solid rgba(0,0,0,0.08);padding:1.2rem;font-family:'DM Sans',sans-serif;">
-  
-  <div style="font-size:.7rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;">Settings</div>
-
-  <!-- Model -->
-  <div style="margin-bottom:1rem;">
-    <div style="font-size:.82rem;font-weight:500;color:var(--ink);margin-bottom:.5rem;">🤖 AI Model</div>
-    <select id="modelSelect" onchange="switchModel(this.value)" style="width:100%;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--ink);background:#f7f7f8;border:.5px solid rgba(0,0,0,.1);border-radius:8px;padding:.5rem .7rem;outline:none;cursor:pointer;">
-      <option value="flash">⚡ Gemini Flash</option>
-      <option value="pro">🧠 Gemini Pro</option>
-      <option value="openai">🤖 GPT-4o mini</option>
-    </select>
-  </div>
-
-  <!-- Dark mode -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-    <div style="font-size:.82rem;font-weight:500;color:var(--ink);">🌙 Dark Theme</div>
-    <div onclick="toggleDark()" id="darkToggle" style="width:42px;height:24px;border-radius:100px;background:#e5e5e5;cursor:pointer;position:relative;transition:background .2s;">
-      <div id="darkThumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,0.2);"></div>
-    </div>
-  </div>
-
-  <!-- Clear chat -->
-  <div style="height:.5px;background:rgba(0,0,0,.07);margin-bottom:1rem;"></div>
-  <button onclick="clearChat();toggleSettings();" style="width:100%;font-size:.82rem;font-weight:500;color:#ef4444;background:rgba(239,68,68,.06);border:.5px solid rgba(239,68,68,.2);border-radius:8px;padding:.55rem;cursor:pointer;">🗑 Clear Chat</button>
-</div>
 </body>
 </html>
