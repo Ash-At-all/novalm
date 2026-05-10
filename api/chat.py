@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import httpx
 import os
+import requests
 
 app = FastAPI()
 
@@ -68,3 +69,4 @@ async def chat(request: Request):
                 }
             }]
         })
+   
