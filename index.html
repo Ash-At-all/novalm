@@ -206,8 +206,7 @@ function openChat(){
   setTimeout(()=>document.getElementById('chatIn').focus(),650);
 }
 function goHome(){
-  document.getElementById('settingsBtn').style.display='none';
-toggleSettings(); // close if open
+  document.getElementById('settingsBtn').style.display='none';toggleSettings();
   document.getElementById('clearBtn').style.display='none';
   document.getElementById('hero').classList.remove('gone');
   document.getElementById('canvas').classList.remove('dim');
