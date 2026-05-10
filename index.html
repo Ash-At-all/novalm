@@ -194,26 +194,22 @@ init();
 <script>
 function openChat(){
   document.getElementById('settingsBtn').style.display='flex';
-  document.getElementById('clearBtn').style.display='flex';
   document.getElementById('hero').classList.add('gone');
   document.getElementById('canvas').classList.add('dim');
   document.getElementById('chat').classList.add('on');
   document.getElementById('backBtn').style.display='flex';
   document.getElementById('navUpload').style.display='flex';
-  document.getElementById('navModel').style.display='flex';
   document.getElementById('navKb').style.display='flex';
   document.getElementById('navSocial').style.display='none';
   setTimeout(()=>document.getElementById('chatIn').focus(),650);
 }
 function goHome(){
   document.getElementById('settingsBtn').style.display='none';toggleSettings();
-  document.getElementById('clearBtn').style.display='none';
   document.getElementById('hero').classList.remove('gone');
   document.getElementById('canvas').classList.remove('dim');
   document.getElementById('chat').classList.remove('on');
   document.getElementById('backBtn').style.display='none';
   document.getElementById('navUpload').style.display='none';
-  document.getElementById('navModel').style.display='none';
   document.getElementById('navKb').style.display='none';
   document.getElementById('navSocial').style.display='flex';
   closeKb();
