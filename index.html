@@ -112,11 +112,11 @@ h1 em{color:var(--accent);font-style:italic;}
       <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Upload
     </label>
-    <input type="file" id="fileIn" accept=".txt,.pdf" style="display:none" onchange="loadFile(this)">
     <!-- Model selector -->
    <button id="settingsBtn" onclick="toggleSettings()" style="display:none;width:34px;height:34px;border-radius:50%;background:rgba(91,110,245,.08);border:.5px solid var(--border);cursor:pointer;align-items:center;justify-content:center;color:var(--ink);">
   <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
   </button>
+    <input type="file" id="fileIn" accept=".txt,.pdf" style="display:none" onchange="loadFile(this)">
 
     <!-- KB toggle -->
     <button class="nav-kb" id="navKb" onclick="toggleKb()">
