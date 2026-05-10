@@ -442,19 +442,7 @@ async function send(){
   addUser(q);addThinking();
   const hits=retrieve(q,4);
   const ctx=hits.length?hits.map((h,i)=>'[Chunk '+(i+1)+']\n'+h.c).join('\n\n'):'No relevant content found.';
-const timeRes = await fetch("https://timeapi.io/api/v1/timezone/zone?timeZone=Asia%2FKolkata");
-const timeData = await timeRes.json();
-const raw = timeData.local_time;
-const timePart = raw.slice(11,19);
-let h = parseInt(timePart.slice(0,2));
-const m = timePart.slice(3,5);
-const s = timePart.slice(6,8);
-let ampm;
-if(h===0) ampm=`12:${m}:${s} AM`;
-else if(h<12) ampm=`${h}:${m}:${s} AM`;
-else if(h===12) ampm=`12:${m}:${s} PM`;
-else ampm=`${h-12}:${m}:${s} PM`;
-const sys = "You are NovaLM, an AI-powered RAG assistant created by Mujahid.\n\n" +
+  const sys = "You are NovaLM, an AI-powered RAG assistant created by Mujahid.\n\n" +
 "IMPORTANT RULES:\n" +
 "- Answer using the provided document context whenever possible.\n" +
 "- If information is not in the document, answer normally for casual questions.\n" +
@@ -518,7 +506,6 @@ const sys = "You are NovaLM, an AI-powered RAG assistant created by Mujahid.\n\n
 "- RAG (Retrieval Augmented Generation) improves LLM accuracy by retrieving relevant document chunks at query time.\n" +
 "- It grounds answers in real data and reduces hallucination.\n" +
 "- NovaLM uses TF-IDF cosine similarity for retrieval.\n\n" +
-"- You are NovaLM... Current time in India is "+ampm+". --- DOCUMENT CONTEXT --- "+ctx+" --- END CONTEXT ---...\n" +
 
 "TOKENIZATION:\n" +
 "- Raw text is split into tokens using Byte Pair Encoding (BPE).\n" +
