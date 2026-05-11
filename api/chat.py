@@ -20,52 +20,65 @@ async def chat(request: Request):
     contents = body.get("contents", [])
     system_instruction = body.get("system_instruction", {})
 
-    # ── Cohere ──
-    if model in ["flash", "pro", "openai"]:
-        cohere_key = os.environ.get("COHERE_API_KEY")
-        if not cohere_key:
-            return JSONResponse({"error": "Cohere API key not configured"})
+    cohere_key = os.environ.get("COHERE_API_KEY")
+    if not cohere_key:
+        return JSONResponse({"error": "Cohere API key not configured"})
 
-        # convert history to Cohere format
-        chat_history = []
-        for c in contents[:-1]:
-            role = "CHATBOT" if c["role"] == "model" else "USER"
-            chat_history.append({
-                "role": role,
-                "message": c["parts"][0]["text"]
-            })
-
-        last_message = contents[-1]["parts"][0]["text"]
-        preamble = system_instruction.get("parts", [{}])[0].get("text", "")
-
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                "https://api.cohere.com/v1/chat",
-                headers={
-                    "Authorization": f"Bearer {cohere_key}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": "command-a-03-2025",
-                    "message": last_message,
-                    "chat_history": chat_history,
-                    "preamble": preamble,
-                    "max_tokens": 1000
-                },
-                timeout=30
-            )
-
-        data = response.json()
-
-        if "message" in data and "text" not in data:
-            return JSONResponse({"error": data["message"]})
-
-        # return in Gemini-like format so frontend stays same
-        return JSONResponse({
-            "candidates": [{
-                "content": {
-                    "parts": [{"text": data.get("text", "")}]
-                }
-            }]
+    # convert history to Cohere format
+    chat_history = []
+    for c in contents[:-1]:
+        role = "CHATBOT" if c["role"] == "model" else "USER"
+        chat_history.append({
+            "role": role,
+            "message": c["parts"][0]["text"]
         })
-   
+
+    last_message = contents[-1]["parts"][0]["text"]
+    preamble = system_instruction.get("parts", [{}])[0].get("text", "")
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://api.cohere.com/v1/chat",
+            headers={
+                "Authorization": f"Bearer {cohere_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "command-a-03-2025",
+                "message": last_message,
+                "chat_history": chat_history,
+                "preamble": preamble,
+                "max_tokens": 1000
+            },
+            timeout=30
+        )
+
+    data = response.json()
+
+    if "message" in data and "text" not in data:
+        return JSONResponse({"error": data["message"]})
+
+    reply_text = data.get("text", "")
+
+    # save conversation to ProKart MongoDB
+    try:
+        async with httpx.AsyncClient() as save_client:
+            await save_client.post(
+                "https://prokart-e-commerce.onrender.com/save-conversation",
+                json={
+                    "question": last_message,
+                    "answer": reply_text,
+                    "model": model
+                },
+                timeout=5
+            )
+    except:
+        pass
+
+    return JSONResponse({
+        "candidates": [{
+            "content": {
+                "parts": [{"text": reply_text}]
+            }
+        }]
+    })
