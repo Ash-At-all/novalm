@@ -415,13 +415,29 @@ function addUser(t){
   b.appendChild(d);b.scrollTop=b.scrollHeight;
 }
 
-function addBot(html,srcs){
-  const b=document.getElementById('msgs');
-  const d=document.createElement('div');d.className='row';
-  let s='';if(srcs&&srcs.length)s='<div class="src-tag">📎 '+srcs.length+' chunk'+(srcs.length>1?'s':'')+' · top '+(srcs[0].s*100).toFixed(0)+'%</div>';
-  d.innerHTML='<div class="av b">N</div><div class="bub">'+html+s+'</div>';
-  b.appendChild(d);b.scrollTop=b.scrollHeight;
-  saveChat();
+function addBot(html, srcs) {
+  const b = document.getElementById('msgs');
+  const d = document.createElement('div'); d.className = 'row';
+  let s = ''; if(srcs&&srcs.length) s='<div class="src-tag">📎 '+srcs.length+' chunk'+(srcs.length>1?'s':'')+' · top '+(srcs[0].s*100).toFixed(0)+'%</div>';
+  const bub = document.createElement('div'); bub.className = 'bub';
+  d.innerHTML = '<div class="av b">N</div>';
+  d.appendChild(bub);
+  b.appendChild(d); b.scrollTop = b.scrollHeight;
+
+  // typewriter effect
+  const words = html.split(' ');
+  let i = 0;
+  const timer = setInterval(() => {
+    if(i < words.length) {
+      bub.innerHTML = words.slice(0, i+1).join(' ') + '<span class="cursor">▋</span>' + (i === words.length-1 ? s : '');
+      i++;
+      b.scrollTop = b.scrollHeight;
+    } else {
+      bub.innerHTML = html + s;
+      clearInterval(timer);
+      saveChat();
+    }
+  }, 30);
 }
 
 function addThinking(){
